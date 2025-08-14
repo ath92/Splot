@@ -1,30 +1,50 @@
-import { useRef } from 'react'
-import { Mesh } from 'three'
+import { useRef, useEffect } from 'react'
+import { Object3D, MeshBasicMaterial } from 'three'
 import { useFrame } from '@react-three/fiber'
+import ThreeGlobe from 'three-globe'
 
-function RotatingCube() {
-  const meshRef = useRef<Mesh>(null!)
+function RotatingGlobe() {
+  const globeRef = useRef<Object3D>(null!)
+
+  // Create and setup the globe
+  useEffect(() => {
+    const globe = new ThreeGlobe()
+    
+    // Set a basic blue color for the globe
+    const material = globe.globeMaterial() as MeshBasicMaterial
+    material.color.setHex(0x4477ff)
+
+    // Store ref for cleanup
+    const currentRef = globeRef.current
+
+    // Add the globe to the ref
+    if (currentRef) {
+      currentRef.add(globe)
+    }
+
+    return () => {
+      // Cleanup
+      if (currentRef) {
+        currentRef.remove(globe)
+      }
+    }
+  }, [])
 
   // Add gentle rotation animation
   useFrame((_, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x += delta * 0.2
-      meshRef.current.rotation.y += delta * 0.3
+    if (globeRef.current) {
+      globeRef.current.rotation.x += delta * 0.2
+      globeRef.current.rotation.y += delta * 0.3
     }
   })
 
-  return (
-    <mesh ref={meshRef}>
-      <boxGeometry args={[2, 2, 2]} />
-      <meshBasicMaterial color="#ff6b6b" />
-    </mesh>
-  )
+  return <object3D ref={globeRef} />
 }
 
 export default function Scene() {
   return (
     <>
-      <RotatingCube />
+      <RotatingGlobe />
     </>
   )
 }
