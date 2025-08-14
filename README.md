@@ -7,7 +7,7 @@ A 3D playground web app built with React and React Three Fiber, designed primari
 - **Full-screen 3D canvas** - Immersive experience that fills the entire viewport
 - **Mobile-optimized controls** - Touch-friendly pan, zoom, and rotation controls
 - **Responsive design** - Works seamlessly across mobile, tablet, and desktop devices
-- **Simple 3D rendering** - Displays a rotating cube using meshBasicMaterial (no lights required)
+- **Simple 3D rendering** - Displays a rotating globe using three-globe and meshBasicMaterial (no lights required)
 - **TypeScript support** - Full type safety throughout the application
 
 ## Tech Stack
@@ -18,6 +18,7 @@ A 3D playground web app built with React and React Three Fiber, designed primari
 - **TypeScript** - Type-safe JavaScript
 - **Vite** - Fast build tool and dev server
 - **@react-three/drei** - Useful helpers for React Three Fiber
+- **three-globe** - 3D globe library for Three.js
 
 ## Getting Started
 
@@ -51,7 +52,7 @@ The development server will start at `http://localhost:5173`. The app features:
 
 ### Mobile Controls
 
-- **One finger**: Rotate the scene around the cube
+- **One finger**: Rotate the scene around the globe
 - **Two fingers**: Pan (move) and zoom (pinch) the scene
 - **Touch-optimized**: All interactions work smoothly on mobile devices
 
@@ -60,7 +61,7 @@ The development server will start at `http://localhost:5173`. The app features:
 ```
 src/
 ├── components/
-│   └── Scene.tsx          # 3D scene with rotating cube
+│   └── Scene.tsx          # 3D scene with rotating globe
 ├── App.tsx                # Main app component with Canvas and controls
 ├── main.tsx               # App entry point
 └── index.css              # Single CSS file with all styles
