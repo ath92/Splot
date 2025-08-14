@@ -1,69 +1,71 @@
-# React + TypeScript + Vite
+# Splot
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A 3D playground web app built with React and React Three Fiber, designed primarily for mobile use.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Full-screen 3D canvas** - Immersive experience that fills the entire viewport
+- **Mobile-optimized controls** - Touch-friendly pan, zoom, and rotation controls
+- **Responsive design** - Works seamlessly across mobile, tablet, and desktop devices
+- **Simple 3D rendering** - Displays a rotating cube using meshBasicMaterial (no lights required)
+- **TypeScript support** - Full type safety throughout the application
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **React** - Component-based UI framework
+- **React Three Fiber** - React renderer for Three.js
+- **Three.js** - 3D graphics library
+- **TypeScript** - Type-safe JavaScript
+- **Vite** - Fast build tool and dev server
+- **@react-three/drei** - Useful helpers for React Three Fiber
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Getting Started
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### Prerequisites
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js 18+ and npm
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The development server will start at `http://localhost:5173`. The app features:
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **Pan**: Click and drag or use single finger touch
+- **Zoom**: Mouse wheel or pinch gesture on mobile
+- **Rotate**: Right-click drag or two-finger touch
+
+### Mobile Controls
+
+- **One finger**: Rotate the scene around the cube
+- **Two fingers**: Pan (move) and zoom (pinch) the scene
+- **Touch-optimized**: All interactions work smoothly on mobile devices
+
+## Project Structure
+
 ```
+src/
+├── components/
+│   └── Scene.tsx          # 3D scene with rotating cube
+├── App.tsx                # Main app component with Canvas and controls
+├── main.tsx               # App entry point
+└── index.css              # Single CSS file with all styles
+```
+
+## License
+
+This project is private and not licensed for distribution.
