@@ -29,8 +29,8 @@ function App() {
           minPolarAngle={0}
           maxPolarAngle={Math.PI}
           touches={{
-            ONE: 2, // TOUCH.ROTATE
-            TWO: 1, // TOUCH.DOLLY_PAN
+            ONE: 0, // TOUCH.ROTATE
+            TWO: 2, // TOUCH.DOLLY_PAN
           }}
         />
         
