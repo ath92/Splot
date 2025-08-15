@@ -218,4 +218,4 @@ export class R2Service {
 }
 
 // Create a default instance with the provided bucket URL
-export const r2Service = new R2Service('https://pub-c6544b31bd77476ea971c3c8a00dd8eb.r2.dev');
+export const r2Service = new R2Service('https://pub-c6544b31bd77476ea971c3c8a00dd8eb.r2.dev/');
