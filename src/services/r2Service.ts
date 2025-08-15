@@ -137,8 +137,9 @@ export class R2Service {
 
   /**
    * Parses the response from R2 bucket to extract image information
+   * Made public for testing purposes
    */
-  private parseResponse(responseText: string): ImageData[] {
+  parseResponse(responseText: string): ImageData[] {
     const images: ImageData[] = [];
 
     try {
