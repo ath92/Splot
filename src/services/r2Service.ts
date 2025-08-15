@@ -217,4 +217,4 @@ export class R2Service {
 }
 
 // Create a default instance with the provided bucket URL
-export const r2Service = new R2Service('https://0269140aa6c636355368c840cf5a95b0.r2.cloudflarestorage.com/globe');
+export const r2Service = new R2Service('https://pub-c6544b31bd77476ea971c3c8a00dd8eb.r2.dev');
