@@ -1,14 +1,13 @@
 # Splot
 
-A 3D playground web app built with React and React Three Fiber, designed primarily for mobile use.
+A web app for displaying a set of pictures on a globe based on their geolocation metadata. The pictures will be retrieved from a bucket somewhere.
 
 ## Features
 
 - **Full-screen 3D canvas** - Immersive experience that fills the entire viewport
 - **Mobile-optimized controls** - Touch-friendly pan, zoom, and rotation controls
 - **Responsive design** - Works seamlessly across mobile, tablet, and desktop devices
-- **Simple 3D rendering** - Displays a rotating cube using meshBasicMaterial (no lights required)
-- **TypeScript support** - Full type safety throughout the application
+- **Geolocation-based rendering** - Pictures displayed on a globe according to their geolocation metadata
 
 ## Tech Stack
 
@@ -51,7 +50,7 @@ The development server will start at `http://localhost:5173`. The app features:
 
 ### Mobile Controls
 
-- **One finger**: Rotate the scene around the cube
+- **One finger**: Rotate the scene around the globe
 - **Two fingers**: Pan (move) and zoom (pinch) the scene
 - **Touch-optimized**: All interactions work smoothly on mobile devices
 
@@ -60,7 +59,7 @@ The development server will start at `http://localhost:5173`. The app features:
 ```
 src/
 ├── components/
-│   └── Scene.tsx          # 3D scene with rotating cube
+│   └── Scene.tsx          # 3D scene with globe and pictures
 ├── App.tsx                # Main app component with Canvas and controls
 ├── main.tsx               # App entry point
 └── index.css              # Single CSS file with all styles
