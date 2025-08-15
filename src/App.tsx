@@ -7,8 +7,8 @@ function App() {
     <div className="canvas-container">
       <Canvas
         camera={{
-          position: [0, 0, 5],
-          fov: 75,
+          position: [0, 0, 350],
+          fov: 50,
         }}
         gl={{
           antialias: true,
@@ -21,11 +21,12 @@ function App() {
           enablePan={true}
           enableZoom={true}
           enableRotate={true}
-          zoomSpeed={0.6}
+          zoomSpeed={0.3}
           panSpeed={0.8}
-          rotateSpeed={0.4}
-          minDistance={2}
-          maxDistance={10}
+          rotateSpeed={0.3}
+          minDistance={101}
+          maxDistance={10000}
+          dampingFactor={0.1}
           minPolarAngle={0}
           maxPolarAngle={Math.PI}
           touches={{
