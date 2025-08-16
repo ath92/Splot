@@ -1,0 +1,14 @@
+{
+  "name": "splot-hello-worker",
+  "version": "1.0.0",
+  "description": "Hello World Cloudflare Worker for Splot project",
+  "main": "src/index.js",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241011.0",
+    "wrangler": "^3.86.1"
+  }
+}
