@@ -1,6 +1,14 @@
-name = "splot-hello-worker"
+name = "splot-photo-worker"
 main = "src/index.js"
 compatibility_date = "2024-08-16"
 
+[[r2_buckets]]
+binding = "GLOBE"
+bucket_name = "globe"
+
 [env.production]
-name = "splot-hello-worker"
+name = "splot-photo-worker"
+
+[[env.production.r2_buckets]]
+binding = "GLOBE"
+bucket_name = "globe"

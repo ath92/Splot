@@ -1,11 +1,14 @@
 {
-  "name": "splot-hello-worker",
+  "name": "splot-photo-worker",
   "version": "1.0.0",
-  "description": "Hello World Cloudflare Worker for Splot project",
+  "description": "Photo upload worker with geolocation metadata extraction for Splot project",
   "main": "src/index.js",
   "scripts": {
     "deploy": "wrangler deploy",
     "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "exifr": "^7.1.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241011.0",
