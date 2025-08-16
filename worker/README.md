@@ -14,10 +14,23 @@ A simple Cloudflare Worker that responds with a "Hello World" message.
 - `wrangler.toml` - Cloudflare Worker configuration
 - `package.json` - Worker dependencies and scripts
 
+## Setup
+
+To deploy this worker, you need to configure GitHub Secrets:
+
+1. **CF_WORKERS** - Your Cloudflare API Token
+   - Create at: https://dash.cloudflare.com/profile/api-tokens
+   - Use the "Edit Cloudflare Workers" template
+   - Ensure it has permissions: `Zone:Zone Settings:Read`, `Zone:Zone:Read`, `Account:Cloudflare Workers:Edit`
+
+2. **CF_ACCOUNT_ID** - Your Cloudflare Account ID
+   - Found in the Cloudflare dashboard right sidebar
+   - Or visit: https://dash.cloudflare.com/ and copy the Account ID
+
 ## Deployment
 
 The worker is automatically deployed when:
 - Changes are pushed to the `main` branch in the `worker/` directory
 - Or manually triggered via GitHub Actions
 
-Uses the `CF_WORKERS` secret for Cloudflare API authentication.
+The deployment uses the GitHub secrets for authentication with Cloudflare.
