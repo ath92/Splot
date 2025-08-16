@@ -23,7 +23,16 @@ export default {
 
     try {
       if (request.method === "GET") {
-        // Serve upload form
+        // Check if this is a request for photo listing
+        if (url.pathname === "/photos") {
+          return await handlePhotoList(request, env, corsHeaders);
+        }
+        // Check if this is a request for a specific photo
+        if (url.pathname.startsWith("/photo/")) {
+          const filename = url.pathname.substring(7); // Remove "/photo/" prefix
+          return await handlePhotoServe(filename, env, corsHeaders);
+        }
+        // Otherwise serve upload form
         return serveUploadForm(corsHeaders);
       } else if (request.method === "POST") {
         // Handle photo upload
@@ -356,6 +365,144 @@ async function handlePhotoUpload(request, env, corsHeaders) {
     console.error("Upload error:", error);
     return new Response(JSON.stringify({ 
       error: "Upload failed", 
+      details: error.message 
+    }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders
+      }
+    });
+  }
+}
+
+async function handlePhotoList(request, env, corsHeaders) {
+  try {
+    // Check if R2 bucket is available
+    if (!env.GLOBE) {
+      throw new Error("R2 bucket not configured");
+    }
+
+    // List all objects in the R2 bucket
+    const listResult = await env.GLOBE.list();
+    
+    if (!listResult || !listResult.objects) {
+      return new Response(JSON.stringify({
+        photos: [],
+        count: 0
+      }), {
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders
+        }
+      });
+    }
+
+    // Process each object to get metadata and filter for photos with GPS data
+    const photosWithLocation = [];
+    
+    for (const object of listResult.objects) {
+      try {
+        // Get object metadata
+        const objectInfo = await env.GLOBE.head(object.key);
+        
+        if (objectInfo && objectInfo.customMetadata) {
+          const metadata = objectInfo.customMetadata;
+          
+          // Check if this photo has GPS coordinates
+          if (metadata.latitude && metadata.longitude) {
+            // Generate URL for the photo
+            // For now, we'll use a relative URL that can be accessed via the worker
+            // In a production setup, this could be a signed URL or public R2 URL
+            const photoUrl = `${new URL(request.url).origin}/photo/${object.key}`;
+            
+            photosWithLocation.push({
+              filename: object.key,
+              url: photoUrl,
+              location: {
+                latitude: parseFloat(metadata.latitude),
+                longitude: parseFloat(metadata.longitude),
+                altitude: metadata.altitude ? parseFloat(metadata.altitude) : null
+              },
+              uploadedAt: metadata.uploadedAt,
+              fileSize: metadata.fileSize ? parseInt(metadata.fileSize) : object.size,
+              originalName: metadata.originalName,
+              cameraMake: metadata.cameraMake,
+              cameraModel: metadata.cameraModel,
+              dateTime: metadata.dateTime
+            });
+          }
+        }
+      } catch (metadataError) {
+        console.warn(`Could not get metadata for ${object.key}:`, metadataError);
+        // Continue with next object
+      }
+    }
+
+    // Return the list of photos with GPS data
+    return new Response(JSON.stringify({
+      photos: photosWithLocation,
+      count: photosWithLocation.length
+    }, null, 2), {
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders
+      }
+    });
+
+  } catch (error) {
+    console.error("Photo list error:", error);
+    return new Response(JSON.stringify({ 
+      error: "Failed to list photos", 
+      details: error.message 
+    }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders
+      }
+    });
+  }
+}
+
+async function handlePhotoServe(filename, env, corsHeaders) {
+  try {
+    // Check if R2 bucket is available
+    if (!env.GLOBE) {
+      throw new Error("R2 bucket not configured");
+    }
+
+    // Get the photo from R2
+    const object = await env.GLOBE.get(filename);
+    
+    if (!object) {
+      return new Response(JSON.stringify({ 
+        error: "Photo not found" 
+      }), {
+        status: 404,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders
+        }
+      });
+    }
+
+    // Get content type from metadata, fallback to jpeg
+    const contentType = object.httpMetadata?.contentType || "image/jpeg";
+
+    // Return the photo with appropriate headers
+    return new Response(object.body, {
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=31536000", // Cache for 1 year
+        ...corsHeaders
+      }
+    });
+
+  } catch (error) {
+    console.error("Photo serve error:", error);
+    return new Response(JSON.stringify({ 
+      error: "Failed to serve photo", 
       details: error.message 
     }), {
       status: 500,
