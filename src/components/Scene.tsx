@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Globe from 'r3f-globe'
 import { 
   fetchPhotos, 
@@ -79,11 +79,15 @@ export default function Scene({ onPhotoClick }: SceneProps) {
     loadPhotoData()
   }, [])
 
-  const handlePointClick = (point: GlobePoint) => {
-    if (point && point.photo) {
-      onPhotoClick(point.photo)
+  const handlePointClick = useCallback((layer: string, elemData: object | undefined, _event: React.MouseEvent) => {
+    if (layer === 'points' && elemData) {
+      // Type assertion since we know the structure of our point data
+      const pointData = elemData as GlobePoint
+      if (pointData.photo) {
+        onPhotoClick(pointData.photo)
+      }
     }
-  }
+  }, [onPhotoClick])
 
   return (
     <>
@@ -93,7 +97,8 @@ export default function Scene({ onPhotoClick }: SceneProps) {
         pointsData={pointsData}
         pointAltitude="size"
         pointColor="color"
-        {...({ onPointClick: handlePointClick } as any)}
+        pointsMerge={false}
+        onClick={handlePointClick}
       />
       {/* Display loading/error state in console - could be enhanced with UI feedback */}
       {isLoading && console.log('Loading photos...')}
