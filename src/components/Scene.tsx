@@ -15,10 +15,10 @@ function Globe({ pointsData, onPhotoClick }: { pointsData: GlobePoint[], onPhoto
   useEffect(() => {
     // Create the globe instance
     const globe = new ThreeGlobe()
-      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
       .showAtmosphere(true)
       .atmosphereColor('#ffffff')
       .atmosphereAltitude(0.1)
+      .showGlobe(true)
     
     // Add points data
     globe
@@ -45,39 +45,65 @@ function Globe({ pointsData, onPhotoClick }: { pointsData: GlobePoint[], onPhoto
         groupRef.current.remove(globe)
       }
     }
-  }, [pointsData])
+  }, [pointsData, onPhotoClick])
 
-  // Handle click events using React Three Fiber's event system
+  // Simple click handler that tries to find the nearest point
   const handleClick = (event: any) => {
     event.stopPropagation()
     
-    // Get the intersection point
-    const intersectionPoint = event.intersections[0]?.point
-    if (!intersectionPoint || !globeRef.current) return
+    if (!globeRef.current || pointsData.length === 0) return
 
-    // Convert intersection point to lat/lng
-    const normalized = intersectionPoint.clone().normalize()
+    console.log('Globe clicked, checking for nearby points...')
+    
+    // Get the intersection point from the event
+    const intersectionPoint = event.intersections?.[0]?.point
+    if (!intersectionPoint) {
+      console.log('No intersection point found')
+      return
+    }
+
+    console.log('Intersection point:', intersectionPoint)
+    
+    // Account for the globe's scale factor (100x)
+    const normalizedPoint = intersectionPoint.clone().divideScalar(100)
     
     // Convert to spherical coordinates
-    const lat = Math.asin(normalized.y) * 180 / Math.PI
-    const lng = Math.atan2(normalized.z, -normalized.x) * 180 / Math.PI
+    const spherical = new THREE.Spherical()
+    spherical.setFromVector3(normalizedPoint)
     
-    // Find the closest point to the click
+    // Convert to lat/lng
+    const lat = (Math.PI / 2 - spherical.phi) * 180 / Math.PI
+    const lng = (spherical.theta) * 180 / Math.PI
+    
+    console.log('Click coordinates:', { lat, lng })
+    
+    // Find the closest point with a reasonable threshold
     let closestPoint: GlobePoint | null = null
     let minDistance = Infinity
+    const clickThreshold = 15 // Increased threshold to 15 degrees for easier clicking
     
-    pointsData.forEach((point: GlobePoint) => {
-      const distance = Math.sqrt(
-        Math.pow(point.lat - lat, 2) + Math.pow(point.lng - lng, 2)
-      )
-      if (distance < minDistance && distance < 10) { // 10 degree threshold
+    pointsData.forEach((point: GlobePoint, index: number) => {
+      // Calculate great circle distance
+      const deltaLat = (point.lat - lat) * Math.PI / 180
+      const deltaLng = (point.lng - lng) * Math.PI / 180
+      const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                Math.cos(lat * Math.PI / 180) * Math.cos(point.lat * Math.PI / 180) *
+                Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2)
+      const distance = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 180 / Math.PI
+      
+      console.log(`Point ${index} (${point.lat}, ${point.lng}) distance: ${distance} degrees`)
+      
+      if (distance < minDistance && distance < clickThreshold) {
         minDistance = distance
         closestPoint = point
       }
     })
     
     if (closestPoint && 'photo' in closestPoint && (closestPoint as GlobePoint).photo) {
+      console.log('Found closest point, opening photo overlay:', closestPoint)
       onPhotoClick((closestPoint as GlobePoint).photo!)
+    } else {
+      console.log('No point found within threshold. Closest distance:', minDistance)
     }
   }
 
