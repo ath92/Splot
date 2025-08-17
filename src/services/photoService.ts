@@ -31,7 +31,7 @@ export interface GlobePoint {
 }
 
 // Configuration for the worker API
-const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'http://localhost:8787'
+const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://splot-photo-worker.tomhutman.workers.dev'
 
 /**
  * Fetch photos with location data from the worker API
