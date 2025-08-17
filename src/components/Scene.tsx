@@ -63,14 +63,14 @@ export default function Scene() {
       <directionalLight position={[-10, -10, -5]} intensity={0.3} />
       <Globe
         showGlobe={true}
-        globeImageUrl={null}
+        globeImageUrl="/blue-ocean.svg"
         showAtmosphere={true}
         atmosphereColor="lightblue"
         polygonsData={countriesData}
         polygonCapColor={() => '#22c55e'}
         polygonSideColor={() => '#16a34a'} 
         polygonStrokeColor={() => '#065f46'}
-        polygonAltitude={0.001}
+        polygonAltitude={0.01}
         pointsData={pointsData}
         pointAltitude="size"
         pointColor="color"
