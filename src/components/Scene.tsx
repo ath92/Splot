@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import ThreeGlobe from 'three-globe'
 import * as THREE from 'three'
+import { useThree } from '@react-three/fiber'
 import { 
   fetchPhotos, 
   transformPhotosToGlobePoints, 
@@ -11,6 +12,7 @@ import {
 function Globe({ pointsData, onPhotoClick }: { pointsData: GlobePoint[], onPhotoClick: (photo: Photo) => void }) {
   const globeRef = useRef<ThreeGlobe | null>(null)
   const groupRef = useRef<THREE.Group>(null!)
+  const { camera, gl, scene } = useThree()
 
   useEffect(() => {
     // Create the globe instance
@@ -45,70 +47,80 @@ function Globe({ pointsData, onPhotoClick }: { pointsData: GlobePoint[], onPhoto
         groupRef.current.remove(globe)
       }
     }
-  }, [pointsData, onPhotoClick])
+  }, [pointsData])
 
-  // Simple click handler that tries to find the nearest point
-  const handleClick = (event: any) => {
-    event.stopPropagation()
-    
+  useEffect(() => {
     if (!globeRef.current || pointsData.length === 0) return
 
-    console.log('Globe clicked, checking for nearby points...')
-    
-    // Get the intersection point from the event
-    const intersectionPoint = event.intersections?.[0]?.point
-    if (!intersectionPoint) {
-      console.log('No intersection point found')
-      return
+    const raycaster = new THREE.Raycaster()
+    const mouse = new THREE.Vector2()
+
+    const handleClick = (event: MouseEvent) => {
+      // Prevent default behavior
+      event.preventDefault()
+      event.stopPropagation()
+
+      // Calculate mouse position in normalized device coordinates
+      const rect = gl.domElement.getBoundingClientRect()
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+
+      // Set raycaster
+      raycaster.setFromCamera(mouse, camera)
+
+      // Find intersections with the globe
+      const intersects = raycaster.intersectObject(globeRef.current!, true)
+
+      if (intersects.length > 0) {
+        const intersectionPoint = intersects[0].point
+        
+        // Account for the globe's scale factor (100x)
+        const normalizedPoint = intersectionPoint.clone().divideScalar(100)
+        
+        // Convert to spherical coordinates
+        const spherical = new THREE.Spherical()
+        spherical.setFromVector3(normalizedPoint)
+        
+        // Convert to lat/lng
+        const lat = (Math.PI / 2 - spherical.phi) * 180 / Math.PI
+        const lng = (spherical.theta) * 180 / Math.PI
+        
+        // Find the closest point with a reasonable threshold
+        let closestPoint: GlobePoint | null = null
+        let minDistance = Infinity
+        const clickThreshold = 15 // 15 degrees threshold for easier clicking
+        
+        pointsData.forEach((point: GlobePoint) => {
+          // Calculate great circle distance
+          const deltaLat = (point.lat - lat) * Math.PI / 180
+          const deltaLng = (point.lng - lng) * Math.PI / 180
+          const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                    Math.cos(lat * Math.PI / 180) * Math.cos(point.lat * Math.PI / 180) *
+                    Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2)
+          const distance = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 180 / Math.PI
+          
+          if (distance < minDistance && distance < clickThreshold) {
+            minDistance = distance
+            closestPoint = point
+          }
+        })
+        
+        if (closestPoint && 'photo' in closestPoint && (closestPoint as GlobePoint).photo) {
+          onPhotoClick((closestPoint as GlobePoint).photo!)
+        }
+      }
     }
 
-    console.log('Intersection point:', intersectionPoint)
-    
-    // Account for the globe's scale factor (100x)
-    const normalizedPoint = intersectionPoint.clone().divideScalar(100)
-    
-    // Convert to spherical coordinates
-    const spherical = new THREE.Spherical()
-    spherical.setFromVector3(normalizedPoint)
-    
-    // Convert to lat/lng
-    const lat = (Math.PI / 2 - spherical.phi) * 180 / Math.PI
-    const lng = (spherical.theta) * 180 / Math.PI
-    
-    console.log('Click coordinates:', { lat, lng })
-    
-    // Find the closest point with a reasonable threshold
-    let closestPoint: GlobePoint | null = null
-    let minDistance = Infinity
-    const clickThreshold = 15 // Increased threshold to 15 degrees for easier clicking
-    
-    pointsData.forEach((point: GlobePoint, index: number) => {
-      // Calculate great circle distance
-      const deltaLat = (point.lat - lat) * Math.PI / 180
-      const deltaLng = (point.lng - lng) * Math.PI / 180
-      const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-                Math.cos(lat * Math.PI / 180) * Math.cos(point.lat * Math.PI / 180) *
-                Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2)
-      const distance = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 180 / Math.PI
-      
-      console.log(`Point ${index} (${point.lat}, ${point.lng}) distance: ${distance} degrees`)
-      
-      if (distance < minDistance && distance < clickThreshold) {
-        minDistance = distance
-        closestPoint = point
-      }
-    })
-    
-    if (closestPoint && 'photo' in closestPoint && (closestPoint as GlobePoint).photo) {
-      console.log('Found closest point, opening photo overlay:', closestPoint)
-      onPhotoClick((closestPoint as GlobePoint).photo!)
-    } else {
-      console.log('No point found within threshold. Closest distance:', minDistance)
+    // Add event listener to the canvas
+    gl.domElement.addEventListener('click', handleClick)
+
+    return () => {
+      gl.domElement.removeEventListener('click', handleClick)
     }
-  }
+  }, [pointsData, onPhotoClick, camera, gl, scene])
 
   return (
-    <group ref={groupRef} onClick={handleClick} />
+    <group ref={groupRef} />
   )
 }
 
