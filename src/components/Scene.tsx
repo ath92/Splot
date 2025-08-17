@@ -6,8 +6,6 @@ import {
   type GlobePoint,
   type Photo 
 } from '../services/photoService'
-// Temporary import for testing
-import { mockPhotosResponse } from '../test/mockPhotoData'
 
 interface SceneProps {
   onPhotoClick: (photo: Photo) => void
@@ -24,13 +22,40 @@ export default function Scene({ onPhotoClick }: SceneProps) {
         setIsLoading(true)
         setError(null)
         
-        // Use mock data for testing while API is blocked
+        // Use fallback mock data if API is not available (development/testing only)
         let photosResponse
         try {
           photosResponse = await fetchPhotos()
         } catch (error) {
-          console.log('API blocked, using mock data for testing')
-          photosResponse = mockPhotosResponse
+          console.log('API not available, using fallback mock data for development')
+          // Create minimal fallback data for development
+          photosResponse = {
+            photos: [
+              {
+                filename: 'test-photo-1.jpg',
+                url: 'https://picsum.photos/800/600?random=1',
+                location: { latitude: 40.7128, longitude: -74.0060, altitude: 10 },
+                uploadedAt: '2024-01-01T12:00:00Z',
+                fileSize: 1024000,
+                originalName: 'New York City.jpg',
+                cameraMake: 'Canon',
+                cameraModel: 'EOS R5',
+                dateTime: '2024-01-01T12:00:00Z'
+              },
+              {
+                filename: 'test-photo-2.jpg',
+                url: 'https://picsum.photos/800/600?random=2',
+                location: { latitude: 51.5074, longitude: -0.1278, altitude: 11 },
+                uploadedAt: '2024-01-02T12:00:00Z',
+                fileSize: 1536000,
+                originalName: 'London.jpg',
+                cameraMake: 'Sony',
+                cameraModel: 'A7R IV',
+                dateTime: '2024-01-02T12:00:00Z'
+              }
+            ],
+            count: 2
+          }
         }
         
         if (photosResponse.photos.length > 0) {

@@ -59,7 +59,7 @@ export function transformPhotosToGlobePoints(photos: Photo[]): GlobePoint[] {
   return photos.map((photo, index) => ({
     lat: photo.location.latitude,
     lng: photo.location.longitude,
-    size: 0.3 + Math.random() * 0.2, // Vary size slightly for visual interest
+    size: 0.5, // Fixed size for consistent clicking
     color: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'][index % 5], // Cycle through nice colors
     photo // Include original photo data for potential future use
   }))
