@@ -65,15 +65,3 @@ export function transformPhotosToGlobePoints(photos: Photo[]): GlobePoint[] {
   }))
 }
 
-/**
- * Generate fallback sample data when API is unavailable
- */
-export function generateFallbackData(): GlobePoint[] {
-  const N = 30
-  return [...Array(N).keys()].map(() => ({
-    lat: (Math.random() - 0.5) * 180,
-    lng: (Math.random() - 0.5) * 360,
-    size: Math.random() / 3,
-    color: ['red', 'white', 'blue', 'green'][Math.floor(Math.random() * 4)]
-  }))
-}

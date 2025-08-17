@@ -3,7 +3,6 @@ import Globe from 'r3f-globe'
 import { 
   fetchPhotos, 
   transformPhotosToGlobePoints, 
-  generateFallbackData,
   type GlobePoint 
 } from '../services/photoService'
 
@@ -25,14 +24,14 @@ export default function Scene() {
           setPointsData(globePoints)
           console.log(`Loaded ${photosResponse.count} photos with GPS data`)
         } else {
-          // No photos with GPS data, use fallback
-          console.log('No photos with GPS data found, using fallback data')
-          setPointsData(generateFallbackData())
+          // No photos with GPS data, show nothing
+          console.log('No photos with GPS data found')
+          setPointsData([])
         }
       } catch (err) {
-        console.error('Failed to load photos, using fallback data:', err)
+        console.error('Failed to load photos:', err)
         setError(err instanceof Error ? err.message : 'Failed to load photos')
-        setPointsData(generateFallbackData())
+        setPointsData([])
       } finally {
         setIsLoading(false)
       }
