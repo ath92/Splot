@@ -8,6 +8,7 @@ A web app for displaying a set of pictures on a globe based on their geolocation
 - **Mobile-optimized controls** - Touch-friendly pan, zoom, and rotation controls
 - **Responsive design** - Works seamlessly across mobile, tablet, and desktop devices
 - **Geolocation-based rendering** - Pictures displayed on a globe according to their geolocation metadata
+- **Worker API integration** - Fetches real photo data from Cloudflare Worker with GPS metadata
 
 ## Tech Stack
 
@@ -39,6 +40,12 @@ npm run build
 # Preview production build
 npm run preview
 ```
+
+### Configuration
+
+The app uses the production Cloudflare Worker endpoint by default (`https://splot-photo-worker.tomhutman.workers.dev`). 
+
+You can optionally override this by setting the `VITE_WORKER_URL` environment variable if you have your own worker deployment.
 
 ### Development
 
