@@ -79,13 +79,9 @@ export default function Scene({ onPhotoClick }: SceneProps) {
     loadPhotoData()
   }, [])
 
-  const handlePointClick = (layer: string, elemData: object | undefined, _event: React.MouseEvent) => {
-    if (layer === 'points' && elemData) {
-      // Type assertion since we know the structure of our point data
-      const pointData = elemData as GlobePoint
-      if (pointData.photo) {
-        onPhotoClick(pointData.photo)
-      }
+  const handlePointClick = (point: GlobePoint) => {
+    if (point && point.photo) {
+      onPhotoClick(point.photo)
     }
   }
 
@@ -97,7 +93,7 @@ export default function Scene({ onPhotoClick }: SceneProps) {
         pointsData={pointsData}
         pointAltitude="size"
         pointColor="color"
-        onClick={handlePointClick}
+        {...({ onPointClick: handlePointClick } as any)}
       />
       {/* Display loading/error state in console - could be enhanced with UI feedback */}
       {isLoading && console.log('Loading photos...')}
