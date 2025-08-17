@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Sphere } from '@react-three/drei'
+import { useState, useEffect, useRef } from 'react'
+import ThreeGlobe from 'three-globe'
+import * as THREE from 'three'
 import { 
   fetchPhotos, 
   transformPhotosToGlobePoints, 
@@ -8,45 +9,80 @@ import {
 } from '../services/photoService'
 
 function Globe({ pointsData, onPhotoClick }: { pointsData: GlobePoint[], onPhotoClick: (photo: Photo) => void }) {
+  const globeRef = useRef<ThreeGlobe | null>(null)
+  const groupRef = useRef<THREE.Group>(null!)
+
+  useEffect(() => {
+    // Create the globe instance
+    const globe = new ThreeGlobe()
+      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+      .showAtmosphere(true)
+      .atmosphereColor('#ffffff')
+      .atmosphereAltitude(0.1)
+    
+    // Add points data
+    globe
+      .pointsData(pointsData)
+      .pointLat((d: any) => d.lat)
+      .pointLng((d: any) => d.lng)
+      .pointColor((d: any) => d.color)
+      .pointRadius((d: any) => d.size * 0.5)
+      .pointResolution(8)
+      .pointsMerge(false) // Keep points separate for click detection
+
+    // Scale the globe
+    globe.scale.set(100, 100, 100)
+    
+    // Add to group
+    if (groupRef.current) {
+      groupRef.current.add(globe)
+    }
+    globeRef.current = globe
+
+    return () => {
+      // Cleanup
+      if (groupRef.current && globe) {
+        groupRef.current.remove(globe)
+      }
+    }
+  }, [pointsData])
+
+  // Handle click events using React Three Fiber's event system
+  const handleClick = (event: any) => {
+    event.stopPropagation()
+    
+    // Get the intersection point
+    const intersectionPoint = event.intersections[0]?.point
+    if (!intersectionPoint || !globeRef.current) return
+
+    // Convert intersection point to lat/lng
+    const normalized = intersectionPoint.clone().normalize()
+    
+    // Convert to spherical coordinates
+    const lat = Math.asin(normalized.y) * 180 / Math.PI
+    const lng = Math.atan2(normalized.z, -normalized.x) * 180 / Math.PI
+    
+    // Find the closest point to the click
+    let closestPoint: GlobePoint | null = null
+    let minDistance = Infinity
+    
+    pointsData.forEach((point: GlobePoint) => {
+      const distance = Math.sqrt(
+        Math.pow(point.lat - lat, 2) + Math.pow(point.lng - lng, 2)
+      )
+      if (distance < minDistance && distance < 10) { // 10 degree threshold
+        minDistance = distance
+        closestPoint = point
+      }
+    })
+    
+    if (closestPoint && 'photo' in closestPoint && (closestPoint as GlobePoint).photo) {
+      onPhotoClick((closestPoint as GlobePoint).photo!)
+    }
+  }
+
   return (
-    <group>
-      {/* Earth sphere */}
-      <mesh>
-        <sphereGeometry args={[100, 64, 32]} />
-        <meshStandardMaterial 
-          color="#1e3a8a" 
-          roughness={0.7}
-          metalness={0.1}
-        />
-      </mesh>
-      
-      {/* Photo points */}
-      {pointsData.map((point, index) => {
-        // Convert lat/lng to 3D position
-        const phi = (90 - point.lat) * (Math.PI / 180)
-        const theta = (point.lng + 180) * (Math.PI / 180)
-        const radius = 101 + point.size * 2 // Just above globe surface
-        
-        const x = -(radius * Math.sin(phi) * Math.cos(theta))
-        const y = radius * Math.cos(phi)
-        const z = radius * Math.sin(phi) * Math.sin(theta)
-        
-        return (
-          <Sphere
-            key={index}
-            position={[x, y, z]}
-            args={[1.5, 16, 16]}
-            onClick={() => point.photo && onPhotoClick(point.photo)}
-          >
-            <meshStandardMaterial 
-              color={point.color}
-              emissive={point.color}
-              emissiveIntensity={0.3}
-            />
-          </Sphere>
-        )
-      })}
-    </group>
+    <group ref={groupRef} onClick={handleClick} />
   )
 }
 
