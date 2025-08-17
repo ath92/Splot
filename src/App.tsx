@@ -18,11 +18,10 @@ function App() {
       >
         {/* Mobile-friendly orbit controls */}
         <OrbitControls
-          enablePan={true}
+          enablePan={false}
           enableZoom={true}
           enableRotate={true}
           zoomSpeed={0.3}
-          panSpeed={0.8}
           rotateSpeed={0.3}
           minDistance={101}
           maxDistance={10000}
@@ -31,7 +30,7 @@ function App() {
           maxPolarAngle={Math.PI}
           touches={{
             ONE: 0, // TOUCH.ROTATE
-            TWO: 2, // TOUCH.DOLLY_PAN
+            TWO: 3, // TOUCH.DOLLY (zoom only, no pan)
           }}
         />
         
