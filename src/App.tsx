@@ -1,8 +1,21 @@
+import { useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import Scene from './components/Scene'
+import PhotoOverlay from './components/PhotoOverlay'
+import { type Photo } from './services/photoService'
 
 function App() {
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null)
+
+  const handlePhotoClick = (photo: Photo) => {
+    setSelectedPhoto(photo)
+  }
+
+  const handleCloseOverlay = () => {
+    setSelectedPhoto(null)
+  }
+
   return (
     <div className="canvas-container">
       <Canvas
@@ -34,8 +47,13 @@ function App() {
           }}
         />
         
-        <Scene />
+        <Scene onPhotoClick={handlePhotoClick} />
       </Canvas>
+      
+      <PhotoOverlay 
+        photo={selectedPhoto} 
+        onClose={handleCloseOverlay} 
+      />
     </div>
   )
 }
