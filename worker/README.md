@@ -83,6 +83,40 @@ Content-Type: multipart/form-data
 }
 ```
 
+### `GET /photos` - List Photos with Location
+Returns a JSON list of all uploaded photos that have geolocation metadata attached.
+
+**Response:**
+```json
+{
+  "photos": [
+    {
+      "filename": "photo_1692123456789_abc123.jpg",
+      "url": "https://your-worker.domain.workers.dev/photo/photo_1692123456789_abc123.jpg",
+      "location": {
+        "latitude": 37.774929,
+        "longitude": -122.419416,
+        "altitude": 15.2
+      },
+      "uploadedAt": "2023-08-16T10:30:45.123Z",
+      "fileSize": 1234567,
+      "originalName": "vacation_photo.jpg",
+      "cameraMake": "Apple",
+      "cameraModel": "iPhone 14 Pro",
+      "dateTime": "2023:08:16 10:30:45"
+    }
+  ],
+  "count": 1
+}
+```
+
+### `GET /photo/{filename}` - Serve Individual Photo
+Returns the actual photo file for the given filename.
+
+**Response:**
+- Content-Type: image/jpeg
+- Cache-Control: public, max-age=31536000
+
 ## Deployment
 
 The worker is automatically deployed when:

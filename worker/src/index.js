@@ -3,54 +3,28 @@
  * Handles photo uploads and geolocation metadata extraction for Splot
  */
 
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import exifr from 'exifr';
 
-export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-    
-    // CORS headers for all responses
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
-    };
+const app = new Hono();
 
-    // Handle preflight requests
-    if (request.method === "OPTIONS") {
-      return new Response(null, { headers: corsHeaders });
-    }
+// Add CORS middleware
+app.use('*', cors({
+  origin: "*",
+  allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowHeaders: ["Content-Type"]
+}));
 
-    try {
-      if (request.method === "GET") {
-        // Serve upload form
-        return serveUploadForm(corsHeaders);
-      } else if (request.method === "POST") {
-        // Handle photo upload
-        return await handlePhotoUpload(request, env, corsHeaders);
-      } else {
-        return new Response("Method not allowed", { 
-          status: 405, 
-          headers: corsHeaders 
-        });
-      }
-    } catch (error) {
-      console.error("Worker error:", error);
-      return new Response(JSON.stringify({ 
-        error: "Internal server error", 
-        details: error.message 
-      }), {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders
-        }
-      });
-    }
-  }
-};
+// Routes
+app.get('/', (c) => serveUploadForm());
+app.post('/', async (c) => handlePhotoUpload(c));
+app.get('/photos', async (c) => handlePhotoList(c));
+app.get('/photo/:filename', async (c) => handlePhotoServe(c));
 
-function serveUploadForm(corsHeaders) {
+export default app;
+
+function serveUploadForm() {
   const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -228,46 +202,35 @@ function serveUploadForm(corsHeaders) {
 
   return new Response(html, {
     headers: {
-      "Content-Type": "text/html",
-      ...corsHeaders
+      "Content-Type": "text/html"
     }
   });
 }
 
-async function handlePhotoUpload(request, env, corsHeaders) {
+async function handlePhotoUpload(c) {
   try {
+    const env = c.env;
+    
     // Check if R2 bucket is available
     if (!env.GLOBE) {
       throw new Error("R2 bucket not configured");
     }
 
     // Parse the multipart form data
-    const formData = await request.formData();
+    const formData = await c.req.formData();
     const photoFile = formData.get('photo');
     
     if (!photoFile || typeof photoFile === 'string') {
-      return new Response(JSON.stringify({ 
+      return c.json({ 
         error: "No photo file provided" 
-      }), {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders
-        }
-      });
+      }, 400);
     }
 
     // Validate file type
     if (!photoFile.type.includes('jpeg') && !photoFile.type.includes('jpg')) {
-      return new Response(JSON.stringify({ 
+      return c.json({ 
         error: "Only JPEG images are supported" 
-      }), {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders
-        }
-      });
+      }, 400);
     }
 
     // Convert to ArrayBuffer for EXIF processing
@@ -345,24 +308,127 @@ async function handlePhotoUpload(request, env, corsHeaders) {
       hasGpsData: !!gpsData
     };
 
-    return new Response(JSON.stringify(responseData, null, 2), {
+    return c.json(responseData);
+
+  } catch (error) {
+    console.error("Upload error:", error);
+    return c.json({ 
+      error: "Upload failed", 
+      details: error.message 
+    }, 500);
+  }
+}
+
+async function handlePhotoList(c) {
+  try {
+    const env = c.env;
+    
+    // Check if R2 bucket is available
+    if (!env.GLOBE) {
+      throw new Error("R2 bucket not configured");
+    }
+
+    // List all objects in the R2 bucket
+    const listResult = await env.GLOBE.list();
+    
+    if (!listResult || !listResult.objects) {
+      return c.json({
+        photos: [],
+        count: 0
+      });
+    }
+
+    // Process each object to get metadata and filter for photos with GPS data
+    const photosWithLocation = [];
+    
+    for (const object of listResult.objects) {
+      try {
+        // Get object metadata
+        const objectInfo = await env.GLOBE.head(object.key);
+        
+        if (objectInfo && objectInfo.customMetadata) {
+          const metadata = objectInfo.customMetadata;
+          
+          // Check if this photo has GPS coordinates
+          if (metadata.latitude && metadata.longitude) {
+            // Generate URL for the photo
+            // For now, we'll use a relative URL that can be accessed via the worker
+            // In a production setup, this could be a signed URL or public R2 URL
+            const photoUrl = `${new URL(c.req.url).origin}/photo/${object.key}`;
+            
+            photosWithLocation.push({
+              filename: object.key,
+              url: photoUrl,
+              location: {
+                latitude: parseFloat(metadata.latitude),
+                longitude: parseFloat(metadata.longitude),
+                altitude: metadata.altitude ? parseFloat(metadata.altitude) : null
+              },
+              uploadedAt: metadata.uploadedAt,
+              fileSize: metadata.fileSize ? parseInt(metadata.fileSize) : object.size,
+              originalName: metadata.originalName,
+              cameraMake: metadata.cameraMake,
+              cameraModel: metadata.cameraModel,
+              dateTime: metadata.dateTime
+            });
+          }
+        }
+      } catch (metadataError) {
+        console.warn(`Could not get metadata for ${object.key}:`, metadataError);
+        // Continue with next object
+      }
+    }
+
+    // Return the list of photos with GPS data
+    return c.json({
+      photos: photosWithLocation,
+      count: photosWithLocation.length
+    });
+
+  } catch (error) {
+    console.error("Photo list error:", error);
+    return c.json({ 
+      error: "Failed to list photos", 
+      details: error.message 
+    }, 500);
+  }
+}
+
+async function handlePhotoServe(c) {
+  try {
+    const env = c.env;
+    const filename = c.req.param('filename');
+    
+    // Check if R2 bucket is available
+    if (!env.GLOBE) {
+      throw new Error("R2 bucket not configured");
+    }
+
+    // Get the photo from R2
+    const object = await env.GLOBE.get(filename);
+    
+    if (!object) {
+      return c.json({ 
+        error: "Photo not found" 
+      }, 404);
+    }
+
+    // Get content type from metadata, fallback to jpeg
+    const contentType = object.httpMetadata?.contentType || "image/jpeg";
+
+    // Return the photo with appropriate headers
+    return new Response(object.body, {
       headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=31536000" // Cache for 1 year
       }
     });
 
   } catch (error) {
-    console.error("Upload error:", error);
-    return new Response(JSON.stringify({ 
-      error: "Upload failed", 
+    console.error("Photo serve error:", error);
+    return c.json({ 
+      error: "Failed to serve photo", 
       details: error.message 
-    }), {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders
-      }
-    });
+    }, 500);
   }
 }
