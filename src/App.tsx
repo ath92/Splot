@@ -1,10 +1,43 @@
+import { useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import Scene from './components/Scene'
+import PhotoOverlay from './components/PhotoOverlay'
+import { type Photo } from './services/photoService'
+import { mockPhotos } from './test/mockPhotoData'
 
 function App() {
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null)
+
+  const handlePhotoClick = (photo: Photo) => {
+    setSelectedPhoto(photo)
+  }
+
+  const handleCloseOverlay = () => {
+    setSelectedPhoto(null)
+  }
+
   return (
     <div className="canvas-container">
+      {/* Temporary test button to demonstrate photo overlay */}
+      <button 
+        style={{
+          position: 'absolute', 
+          top: '10px', 
+          left: '10px', 
+          zIndex: 1000,
+          padding: '10px',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer'
+        }}
+        onClick={() => setSelectedPhoto(mockPhotos[0])}
+      >
+        Test Photo Overlay
+      </button>
+      
       <Canvas
         camera={{
           position: [0, 0, 350],
@@ -35,8 +68,13 @@ function App() {
           }}
         />
         
-        <Scene />
+        <Scene onPhotoClick={handlePhotoClick} />
       </Canvas>
+      
+      <PhotoOverlay 
+        photo={selectedPhoto} 
+        onClose={handleCloseOverlay} 
+      />
     </div>
   )
 }

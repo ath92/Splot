@@ -3,10 +3,17 @@ import Globe from 'r3f-globe'
 import { 
   fetchPhotos, 
   transformPhotosToGlobePoints, 
-  type GlobePoint 
+  type GlobePoint,
+  type Photo 
 } from '../services/photoService'
+// Temporary import for testing
+import { mockPhotosResponse } from '../test/mockPhotoData'
 
-export default function Scene() {
+interface SceneProps {
+  onPhotoClick: (photo: Photo) => void
+}
+
+export default function Scene({ onPhotoClick }: SceneProps) {
   const [pointsData, setPointsData] = useState<GlobePoint[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -17,7 +24,14 @@ export default function Scene() {
         setIsLoading(true)
         setError(null)
         
-        const photosResponse = await fetchPhotos()
+        // Use mock data for testing while API is blocked
+        let photosResponse
+        try {
+          photosResponse = await fetchPhotos()
+        } catch (error) {
+          console.log('API blocked, using mock data for testing')
+          photosResponse = mockPhotosResponse
+        }
         
         if (photosResponse.photos.length > 0) {
           const globePoints = transformPhotosToGlobePoints(photosResponse.photos)
@@ -40,6 +54,16 @@ export default function Scene() {
     loadPhotoData()
   }, [])
 
+  const handlePointClick = (layer: string, elemData: object | undefined, _event: React.MouseEvent) => {
+    if (layer === 'points' && elemData) {
+      // Type assertion since we know the structure of our point data
+      const pointData = elemData as GlobePoint
+      if (pointData.photo) {
+        onPhotoClick(pointData.photo)
+      }
+    }
+  }
+
   return (
     <>
       <ambientLight intensity={0.1} />
@@ -48,6 +72,7 @@ export default function Scene() {
         pointsData={pointsData}
         pointAltitude="size"
         pointColor="color"
+        onClick={handlePointClick}
       />
       {/* Display loading/error state in console - could be enhanced with UI feedback */}
       {isLoading && console.log('Loading photos...')}
