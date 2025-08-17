@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import Globe from 'r3f-globe'
+import { useState, useEffect } from 'react'
+import { Sphere } from '@react-three/drei'
 import { 
   fetchPhotos, 
   transformPhotosToGlobePoints, 
@@ -7,21 +7,59 @@ import {
   type Photo 
 } from '../services/photoService'
 
+function Globe({ pointsData, onPhotoClick }: { pointsData: GlobePoint[], onPhotoClick: (photo: Photo) => void }) {
+  return (
+    <group>
+      {/* Earth sphere */}
+      <mesh>
+        <sphereGeometry args={[100, 64, 32]} />
+        <meshStandardMaterial 
+          color="#1e3a8a" 
+          roughness={0.7}
+          metalness={0.1}
+        />
+      </mesh>
+      
+      {/* Photo points */}
+      {pointsData.map((point, index) => {
+        // Convert lat/lng to 3D position
+        const phi = (90 - point.lat) * (Math.PI / 180)
+        const theta = (point.lng + 180) * (Math.PI / 180)
+        const radius = 101 + point.size * 2 // Just above globe surface
+        
+        const x = -(radius * Math.sin(phi) * Math.cos(theta))
+        const y = radius * Math.cos(phi)
+        const z = radius * Math.sin(phi) * Math.sin(theta)
+        
+        return (
+          <Sphere
+            key={index}
+            position={[x, y, z]}
+            args={[1.5, 16, 16]}
+            onClick={() => point.photo && onPhotoClick(point.photo)}
+          >
+            <meshStandardMaterial 
+              color={point.color}
+              emissive={point.color}
+              emissiveIntensity={0.3}
+            />
+          </Sphere>
+        )
+      })}
+    </group>
+  )
+}
+
 interface SceneProps {
   onPhotoClick: (photo: Photo) => void
 }
 
 export default function Scene({ onPhotoClick }: SceneProps) {
   const [pointsData, setPointsData] = useState<GlobePoint[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadPhotoData() {
       try {
-        setIsLoading(true)
-        setError(null)
-        
         // Use fallback mock data if API is not available (development/testing only)
         let photosResponse
         try {
@@ -69,40 +107,18 @@ export default function Scene({ onPhotoClick }: SceneProps) {
         }
       } catch (err) {
         console.error('Failed to load photos:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load photos')
         setPointsData([])
-      } finally {
-        setIsLoading(false)
       }
     }
 
     loadPhotoData()
   }, [])
 
-  const handlePointClick = useCallback((layer: string, elemData: object | undefined, _event: React.MouseEvent) => {
-    if (layer === 'points' && elemData) {
-      // Type assertion since we know the structure of our point data
-      const pointData = elemData as GlobePoint
-      if (pointData.photo) {
-        onPhotoClick(pointData.photo)
-      }
-    }
-  }, [onPhotoClick])
-
   return (
     <>
-      <ambientLight intensity={0.1} />
+      <ambientLight intensity={0.2} />
       <directionalLight position={[10, 10, 5]} intensity={1} />
-      <Globe
-        pointsData={pointsData}
-        pointAltitude="size"
-        pointColor="color"
-        pointsMerge={false}
-        onClick={handlePointClick}
-      />
-      {/* Display loading/error state in console - could be enhanced with UI feedback */}
-      {isLoading && console.log('Loading photos...')}
-      {error && console.log('Error loading photos:', error)}
+      <Globe pointsData={pointsData} onPhotoClick={onPhotoClick} />
     </>
   )
 }
