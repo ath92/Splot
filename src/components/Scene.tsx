@@ -45,6 +45,7 @@ export default function Scene() {
       <ambientLight intensity={0.1} />
       <directionalLight position={[10, 10, 5]} intensity={1} />
       <Globe
+        globeImageUrl="https://unpkg.com/three-globe/example/img/earth-night.jpg"
         pointsData={pointsData}
         pointAltitude="size"
         pointColor="color"
