@@ -2,12 +2,112 @@
   "title": "Mini Retirement Trip 2025",
   "segments": [
     {
-      "id": "Beijing-to-Seoul",
+      "id": "Xiamen-to-Guilin",
+      "from": {
+        "name": "Xiamen",
+        "country": "China",
+        "latitude": 24.4798,
+        "longitude": 118.0819
+      },
+      "to": {
+        "name": "Guilin",
+        "country": "China",
+        "latitude": 25.2736,
+        "longitude": 110.2906
+      },
+      "startDate": "April 3, 2025",
+      "endDate": "April 3, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Domestic flight from Xiamen to Guilin"
+    },
+    {
+      "id": "Guilin-to-Zhangjiajie",
+      "from": {
+        "name": "Guilin",
+        "country": "China",
+        "latitude": 25.2736,
+        "longitude": 110.2906
+      },
+      "to": {
+        "name": "Zhangjiajie",
+        "country": "China",
+        "latitude": 29.1274,
+        "longitude": 110.4788
+      },
+      "startDate": "April 6, 2025",
+      "endDate": "April 6, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "High-speed train from Guilin to Zhangjiajie"
+    },
+    {
+      "id": "Zhangjiajie-to-Xian",
+      "from": {
+        "name": "Zhangjiajie",
+        "country": "China",
+        "latitude": 29.1274,
+        "longitude": 110.4788
+      },
+      "to": {
+        "name": "Xi'an",
+        "country": "China",
+        "latitude": 34.3416,
+        "longitude": 108.9398
+      },
+      "startDate": "April 13, 2025",
+      "endDate": "April 13, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Travel from Zhangjiajie to Xi'an"
+    },
+    {
+      "id": "Xian-to-Beijing",
+      "from": {
+        "name": "Xi'an",
+        "country": "China",
+        "latitude": 34.3416,
+        "longitude": 108.9398
+      },
+      "to": {
+        "name": "Beijing",
+        "country": "China",
+        "latitude": 39.9042,
+        "longitude": 116.4074
+      },
+      "startDate": "April 13, 2025",
+      "endDate": "April 13, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "High-speed train from Xi'an to Beijing"
+    },
+    {
+      "id": "Beijing-to-Shanghai",
       "from": {
         "name": "Beijing",
         "country": "China",
         "latitude": 39.9042,
         "longitude": 116.4074
+      },
+      "to": {
+        "name": "Shanghai",
+        "country": "China",
+        "latitude": 31.2304,
+        "longitude": 121.4737
+      },
+      "startDate": "April 17, 2025",
+      "endDate": "April 18, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Overnight train from Beijing to Shanghai"
+    },
+    {
+      "id": "Shanghai-to-Seoul",
+      "from": {
+        "name": "Shanghai",
+        "country": "China",
+        "latitude": 31.2304,
+        "longitude": 121.4737
       },
       "to": {
         "name": "Seoul",
@@ -19,7 +119,7 @@
       "endDate": "April 22, 2025",
       "type": "flight",
       "hasFlight": true,
-      "notes": "Flight from Beijing to Seoul"
+      "notes": "Flight from Shanghai to Seoul"
     },
     {
       "id": "Seoul-to-Taipei",
@@ -42,7 +142,7 @@
       "notes": "Flight from Seoul to Taipei"
     },
     {
-      "id": "Taipei-to-Ho-Chi-Minh-City",
+      "id": "Taipei-to-Hanoi",
       "from": {
         "name": "Taipei",
         "country": "Taiwan",
@@ -50,24 +150,84 @@
         "longitude": 121.5654
       },
       "to": {
-        "name": "Ho Chi Minh City",
+        "name": "Hanoi",
         "country": "Vietnam",
-        "latitude": 10.8231,
-        "longitude": 106.6297
+        "latitude": 21.0285,
+        "longitude": 105.8542
       },
       "startDate": "May 16, 2025",
       "endDate": "May 16, 2025",
       "type": "flight",
       "hasFlight": true,
-      "notes": "Flight from Taipei to Ho Chi Minh City"
+      "notes": "Flight from Taichung to Hanoi"
     },
     {
-      "id": "Ho-Chi-Minh-City-to-Kuala-Lumpur",
+      "id": "Hanoi-to-Da-Nang",
       "from": {
-        "name": "Ho Chi Minh City",
+        "name": "Hanoi",
         "country": "Vietnam",
-        "latitude": 10.8231,
-        "longitude": 106.6297
+        "latitude": 21.0285,
+        "longitude": 105.8542
+      },
+      "to": {
+        "name": "Da Nang",
+        "country": "Vietnam",
+        "latitude": 16.0544,
+        "longitude": 108.2022
+      },
+      "startDate": "May 31, 2025",
+      "endDate": "May 31, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight from Hanoi to Da Nang"
+    },
+    {
+      "id": "Da-Nang-to-Kota-Bharu",
+      "from": {
+        "name": "Da Nang",
+        "country": "Vietnam",
+        "latitude": 16.0544,
+        "longitude": 108.2022
+      },
+      "to": {
+        "name": "Kota Bharu",
+        "country": "Malaysia",
+        "latitude": 6.1254,
+        "longitude": 102.2381
+      },
+      "startDate": "June 11, 2025",
+      "endDate": "June 11, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight from Da Nang to Kota Bharu"
+    },
+    {
+      "id": "Kota-Bharu-to-Penang",
+      "from": {
+        "name": "Kota Bharu",
+        "country": "Malaysia",
+        "latitude": 6.1254,
+        "longitude": 102.2381
+      },
+      "to": {
+        "name": "Penang",
+        "country": "Malaysia",
+        "latitude": 5.4164,
+        "longitude": 100.3327
+      },
+      "startDate": "June 16, 2025",
+      "endDate": "June 16, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Bus from Kuala Besut to Penang"
+    },
+    {
+      "id": "Penang-to-Kuala-Lumpur",
+      "from": {
+        "name": "Penang",
+        "country": "Malaysia",
+        "latitude": 5.4164,
+        "longitude": 100.3327
       },
       "to": {
         "name": "Kuala Lumpur",
@@ -75,11 +235,11 @@
         "latitude": 3.1390,
         "longitude": 101.6869
       },
-      "startDate": "June 11, 2025",
-      "endDate": "June 11, 2025",
+      "startDate": "June 29, 2025",
+      "endDate": "June 29, 2025",
       "type": "flight",
       "hasFlight": true,
-      "notes": "Flight from Ho Chi Minh City to Kuala Lumpur"
+      "notes": "Flight from Penang to Kuala Lumpur"
     },
     {
       "id": "Kuala-Lumpur-to-Jakarta",
@@ -135,11 +295,11 @@
         "latitude": 51.5074,
         "longitude": -0.1278
       },
-      "startDate": "July 31, 2025",
+      "startDate": "July 30, 2025",
       "endDate": "August 3, 2025",
       "type": "flight",
       "hasFlight": true,
-      "notes": "Flight from Singapore to London"
+      "notes": "Flight from Singapore to London via Guangzhou"
     },
     {
       "id": "London-to-Amsterdam",
@@ -286,12 +446,52 @@
   ],
   "locations": [
     {
+      "name": "Xiamen",
+      "country": "China",
+      "latitude": 24.4798,
+      "longitude": 118.0819,
+      "stayDuration": "April 1 - April 3, 2025",
+      "description": "Coastal city in Fujian province, starting point of China journey"
+    },
+    {
+      "name": "Guilin",
+      "country": "China",
+      "latitude": 25.2736,
+      "longitude": 110.2906,
+      "stayDuration": "April 3 - April 6, 2025",
+      "description": "Famous for karst landscape and Li River scenery"
+    },
+    {
+      "name": "Zhangjiajie",
+      "country": "China",
+      "latitude": 29.1274,
+      "longitude": 110.4788,
+      "stayDuration": "April 6 - April 13, 2025",
+      "description": "National Forest Park with unique pillar rock formations"
+    },
+    {
+      "name": "Xi'an",
+      "country": "China",
+      "latitude": 34.3416,
+      "longitude": 108.9398,
+      "stayDuration": "April 13, 2025",
+      "description": "Ancient capital and home of the Terracotta Army"
+    },
+    {
       "name": "Beijing",
       "country": "China",
       "latitude": 39.9042,
       "longitude": 116.4074,
-      "stayDuration": "April 1 - April 22, 2025",
+      "stayDuration": "April 13 - April 17, 2025",
       "description": "Capital city of China"
+    },
+    {
+      "name": "Shanghai",
+      "country": "China",
+      "latitude": 31.2304,
+      "longitude": 121.4737,
+      "stayDuration": "April 18 - April 22, 2025",
+      "description": "Largest city in China, includes visits to Suzhou"
     },
     {
       "name": "Seoul",
@@ -310,19 +510,43 @@
       "description": "Capital city of Taiwan"
     },
     {
-      "name": "Ho Chi Minh City",
+      "name": "Hanoi",
       "country": "Vietnam",
-      "latitude": 10.8231,
-      "longitude": 106.6297,
-      "stayDuration": "May 16 - June 11, 2025",
-      "description": "Largest city in Vietnam"
+      "latitude": 21.0285,
+      "longitude": 105.8542,
+      "stayDuration": "May 16 - May 31, 2025",
+      "description": "Capital city of Vietnam, includes trips to Ha Giang and Sa Pa"
+    },
+    {
+      "name": "Da Nang",
+      "country": "Vietnam",
+      "latitude": 16.0544,
+      "longitude": 108.2022,
+      "stayDuration": "May 31 - June 11, 2025",
+      "description": "Central Vietnam, includes Hoi An and Hue"
+    },
+    {
+      "name": "Kota Bharu",
+      "country": "Malaysia",
+      "latitude": 6.1254,
+      "longitude": 102.2381,
+      "stayDuration": "June 11 - June 16, 2025",
+      "description": "Eastern Malaysia, includes Perhentian Islands"
+    },
+    {
+      "name": "Penang",
+      "country": "Malaysia",
+      "latitude": 5.4164,
+      "longitude": 100.3327,
+      "stayDuration": "June 16 - June 29, 2025",
+      "description": "Island state in Malaysia, UNESCO World Heritage Georgetown"
     },
     {
       "name": "Kuala Lumpur",
       "country": "Malaysia",
       "latitude": 3.1390,
       "longitude": 101.6869,
-      "stayDuration": "June 11 - June 30, 2025",
+      "stayDuration": "June 29 - June 30, 2025",
       "description": "Capital city of Malaysia"
     },
     {
@@ -338,7 +562,7 @@
       "country": "Singapore",
       "latitude": 1.3521,
       "longitude": 103.8198,
-      "stayDuration": "July 27 - July 31, 2025",
+      "stayDuration": "July 27 - July 30, 2025",
       "description": "City-state in Southeast Asia"
     },
     {
@@ -402,37 +626,37 @@
   "countries": [
     {
       "name": "China",
-      "cities": ["Beijing", "Shanghai", "Xi'an"],
+      "cities": ["Xiamen", "Guilin", "Zhangjiajie", "Xi'an", "Beijing", "Shanghai"],
       "mainCity": "Beijing",
       "coordinates": { "latitude": 39.9042, "longitude": 116.4074 }
     },
     {
       "name": "Korea",
-      "cities": ["Seoul", "Busan", "Incheon"],
+      "cities": ["Seoul"],
       "mainCity": "Seoul",
       "coordinates": { "latitude": 37.5665, "longitude": 126.9780 }
     },
     {
       "name": "Taiwan",
-      "cities": ["Taipei", "Kaohsiung", "Taichung"],
+      "cities": ["Taipei"],
       "mainCity": "Taipei",
       "coordinates": { "latitude": 25.0330, "longitude": 121.5654 }
     },
     {
       "name": "Vietnam",
-      "cities": ["Ho Chi Minh City", "Hanoi", "Da Nang"],
-      "mainCity": "Ho Chi Minh City",
-      "coordinates": { "latitude": 10.8231, "longitude": 106.6297 }
+      "cities": ["Hanoi", "Da Nang", "Hoi An", "Hue"],
+      "mainCity": "Hanoi",
+      "coordinates": { "latitude": 21.0285, "longitude": 105.8542 }
     },
     {
       "name": "Malaysia",
-      "cities": ["Kuala Lumpur", "George Town", "Johor Bahru"],
+      "cities": ["Kota Bharu", "Penang", "Kuala Lumpur"],
       "mainCity": "Kuala Lumpur",
       "coordinates": { "latitude": 3.1390, "longitude": 101.6869 }
     },
     {
       "name": "Indonesia",
-      "cities": ["Jakarta", "Denpasar", "Yogyakarta"],
+      "cities": ["Jakarta"],
       "mainCity": "Jakarta",
       "coordinates": { "latitude": -6.2088, "longitude": 106.8456 }
     },
@@ -444,13 +668,13 @@
     },
     {
       "name": "United Kingdom",
-      "cities": ["London", "Manchester", "Edinburgh"],
+      "cities": ["London"],
       "mainCity": "London",
       "coordinates": { "latitude": 51.5074, "longitude": -0.1278 }
     },
     {
       "name": "Netherlands",
-      "cities": ["Amsterdam", "Rotterdam", "Ommen"],
+      "cities": ["Amsterdam", "Ommen"],
       "mainCity": "Amsterdam",
       "coordinates": { "latitude": 52.3676, "longitude": 4.9041 }
     },
