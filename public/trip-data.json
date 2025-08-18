@@ -1,0 +1,329 @@
+{
+  "title": "Mini Retirement Trip 2025",
+  "segments": [
+    {
+      "id": "China-to-Korea",
+      "from": {
+        "name": "China",
+        "latitude": 35.8617,
+        "longitude": 104.1954
+      },
+      "to": {
+        "name": "Korea",
+        "latitude": 35.9078,
+        "longitude": 127.7669
+      },
+      "startDate": "April 22, 2025",
+      "endDate": "April 22, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight connection"
+    },
+    {
+      "id": "Korea-to-Taiwan",
+      "from": {
+        "name": "Korea",
+        "latitude": 35.9078,
+        "longitude": 127.7669
+      },
+      "to": {
+        "name": "Taiwan",
+        "latitude": 23.6978,
+        "longitude": 120.9605
+      },
+      "startDate": "May 6, 2025",
+      "endDate": "May 6, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight connection"
+    },
+    {
+      "id": "Taiwan-to-Vietnam",
+      "from": {
+        "name": "Taiwan",
+        "latitude": 23.6978,
+        "longitude": 120.9605
+      },
+      "to": {
+        "name": "Vietnam",
+        "latitude": 14.0583,
+        "longitude": 108.2772
+      },
+      "startDate": "May 16, 2025",
+      "endDate": "May 16, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight connection"
+    },
+    {
+      "id": "Vietnam-to-Malaysia",
+      "from": {
+        "name": "Vietnam",
+        "latitude": 14.0583,
+        "longitude": 108.2772
+      },
+      "to": {
+        "name": "Malaysia",
+        "latitude": 4.2105,
+        "longitude": 101.9758
+      },
+      "startDate": "June 11, 2025",
+      "endDate": "June 11, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight connection"
+    },
+    {
+      "id": "Malaysia-to-Indonesia",
+      "from": {
+        "name": "Malaysia",
+        "latitude": 4.2105,
+        "longitude": 101.9758
+      },
+      "to": {
+        "name": "Indonesia",
+        "latitude": -0.7893,
+        "longitude": 113.9213
+      },
+      "startDate": "June 30, 2025",
+      "endDate": "June 30, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight connection"
+    },
+    {
+      "id": "Indonesia-to-Singapore",
+      "from": {
+        "name": "Indonesia",
+        "latitude": -0.7893,
+        "longitude": 113.9213
+      },
+      "to": {
+        "name": "Singapore",
+        "latitude": 1.3521,
+        "longitude": 103.8198
+      },
+      "startDate": "July 27, 2025",
+      "endDate": "July 27, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight connection"
+    },
+    {
+      "id": "Singapore-to-London",
+      "from": {
+        "name": "Singapore",
+        "latitude": 1.3521,
+        "longitude": 103.8198
+      },
+      "to": {
+        "name": "London",
+        "latitude": 51.5074,
+        "longitude": -0.1278
+      },
+      "startDate": "July 31, 2025",
+      "endDate": "August 3, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight connection"
+    },
+    {
+      "id": "London-to-Netherlands",
+      "from": {
+        "name": "London",
+        "latitude": 51.5074,
+        "longitude": -0.1278
+      },
+      "to": {
+        "name": "Netherlands",
+        "latitude": 52.1326,
+        "longitude": 5.2913
+      },
+      "startDate": "August 4, 2025",
+      "endDate": "August 4, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Ground travel"
+    },
+    {
+      "id": "Netherlands-to-Bergamo",
+      "from": {
+        "name": "Netherlands",
+        "latitude": 52.1326,
+        "longitude": 5.2913
+      },
+      "to": {
+        "name": "Bergamo",
+        "latitude": 45.6983,
+        "longitude": 9.6773
+      },
+      "startDate": "August 7, 2025",
+      "endDate": "August 31, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Ground travel"
+    },
+    {
+      "id": "Bergamo-to-Puglia",
+      "from": {
+        "name": "Bergamo",
+        "latitude": 45.6983,
+        "longitude": 9.6773
+      },
+      "to": {
+        "name": "Puglia",
+        "latitude": 41.1255,
+        "longitude": 16.8672
+      },
+      "startDate": "September 5, 2025",
+      "endDate": "September 6, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Ground travel"
+    },
+    {
+      "id": "Puglia-to-San Marino",
+      "from": {
+        "name": "Puglia",
+        "latitude": 41.1255,
+        "longitude": 16.8672
+      },
+      "to": {
+        "name": "San Marino",
+        "latitude": 43.9333,
+        "longitude": 12.4667
+      },
+      "startDate": "September 19, 2025",
+      "endDate": "September 20, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Ground travel"
+    },
+    {
+      "id": "San Marino-to-Reggio",
+      "from": {
+        "name": "San Marino",
+        "latitude": 43.9333,
+        "longitude": 12.4667
+      },
+      "to": {
+        "name": "Reggio",
+        "latitude": 38.1097,
+        "longitude": 15.6547
+      },
+      "startDate": "September 23, 2025",
+      "endDate": "September 24, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Ground travel"
+    },
+    {
+      "id": "Reggio-to-Bergamo",
+      "from": {
+        "name": "Reggio",
+        "latitude": 38.1097,
+        "longitude": 15.6547
+      },
+      "to": {
+        "name": "Bergamo",
+        "latitude": 45.6983,
+        "longitude": 9.6773
+      },
+      "startDate": "September 26, 2025",
+      "endDate": "September 26, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Ground travel"
+    },
+    {
+      "id": "Bergamo-to-Ommen",
+      "from": {
+        "name": "Bergamo",
+        "latitude": 45.6983,
+        "longitude": 9.6773
+      },
+      "to": {
+        "name": "Ommen",
+        "latitude": 52.5167,
+        "longitude": 6.4167
+      },
+      "startDate": "September 27, 2025",
+      "endDate": "September 28, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Ground travel"
+    }
+  ],
+  "locations": [
+    {
+      "name": "China",
+      "latitude": 35.8617,
+      "longitude": 104.1954
+    },
+    {
+      "name": "Korea",
+      "latitude": 35.9078,
+      "longitude": 127.7669
+    },
+    {
+      "name": "Taiwan",
+      "latitude": 23.6978,
+      "longitude": 120.9605
+    },
+    {
+      "name": "Vietnam",
+      "latitude": 14.0583,
+      "longitude": 108.2772
+    },
+    {
+      "name": "Malaysia",
+      "latitude": 4.2105,
+      "longitude": 101.9758
+    },
+    {
+      "name": "Indonesia",
+      "latitude": -0.7893,
+      "longitude": 113.9213
+    },
+    {
+      "name": "Singapore",
+      "latitude": 1.3521,
+      "longitude": 103.8198
+    },
+    {
+      "name": "London",
+      "latitude": 51.5074,
+      "longitude": -0.1278
+    },
+    {
+      "name": "Netherlands",
+      "latitude": 52.1326,
+      "longitude": 5.2913
+    },
+    {
+      "name": "Bergamo",
+      "latitude": 45.6983,
+      "longitude": 9.6773
+    },
+    {
+      "name": "Reggio",
+      "latitude": 38.1097,
+      "longitude": 15.6547
+    },
+    {
+      "name": "Puglia",
+      "latitude": 41.1255,
+      "longitude": 16.8672
+    },
+    {
+      "name": "San Marino",
+      "latitude": 43.9333,
+      "longitude": 12.4667
+    },
+    {
+      "name": "Ommen",
+      "latitude": 52.5167,
+      "longitude": 6.4167
+    }
+  ]
+}

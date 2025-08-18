@@ -8,6 +8,11 @@ import {
   type GlobePoint,
   type Photo 
 } from '../services/photoService'
+import { 
+  getFlightArcs, 
+  getGroundPaths, 
+  getTripPoints 
+} from '../services/tripService'
 
 function Globe({ pointsData, countriesData, onPhotoClick }: { 
   pointsData: GlobePoint[], 
@@ -35,15 +40,46 @@ function Globe({ pointsData, countriesData, onPhotoClick }: {
       .polygonStrokeColor(() => '#065f46')
       .polygonAltitude(0.01)
     
-    // Add points data
+    // Add trip location points
+    const tripPoints = getTripPoints()
+    const combinedPoints = [...pointsData, ...tripPoints]
+    
+    // Add combined points data 
     globe
-      .pointsData(pointsData)
+      .pointsData(combinedPoints)
       .pointLat((d: any) => d.lat)
       .pointLng((d: any) => d.lng)
       .pointColor((d: any) => d.color)
       .pointRadius((d: any) => d.size * 0.5)
       .pointResolution(8)
       .pointsMerge(false) // Keep points separate for click detection
+
+    // Add trip route visualization
+    // Flight routes as arcs
+    const flightArcs = getFlightArcs()
+    globe
+      .arcsData(flightArcs)
+      .arcStartLat((d: any) => d.startLat)
+      .arcStartLng((d: any) => d.startLng)
+      .arcEndLat((d: any) => d.endLat)
+      .arcEndLng((d: any) => d.endLng)
+      .arcColor((d: any) => d.color)
+      .arcStroke((d: any) => d.stroke)
+      .arcAltitude((d: any) => d.altitude)
+      .arcDashLength(0.9)
+      .arcDashGap(0.1)
+      .arcDashAnimateTime(1000)
+
+    // Ground routes as paths
+    const groundPaths = getGroundPaths()
+    globe
+      .pathsData(groundPaths)
+      .pathPoints((d: any) => d.coords)
+      .pathPointLat((coord: any) => coord[1]) // lat is index 1
+      .pathPointLng((coord: any) => coord[0]) // lng is index 0
+      .pathColor((d: any) => d.color)
+      .pathStroke((d: any) => d.stroke)
+      .pathPointAlt(() => 0.01)
 
     // Scale the globe
     globe.scale.set(100, 100, 100)
