@@ -8,10 +8,16 @@ import {
   type GlobePoint,
   type Photo 
 } from '../services/photoService'
+import { 
+  getFlightsData, 
+  transformFlightsToGlobeArcs, 
+  type FlightArc 
+} from '../services/flightsService'
 
-function Globe({ pointsData, countriesData, onPhotoClick }: { 
+function Globe({ pointsData, countriesData, arcsData, onPhotoClick }: { 
   pointsData: GlobePoint[], 
   countriesData: any[], 
+  arcsData: FlightArc[],
   onPhotoClick: (photo: Photo) => void 
 }) {
   const globeRef = useRef<ThreeGlobe | null>(null)
@@ -45,6 +51,19 @@ function Globe({ pointsData, countriesData, onPhotoClick }: {
       .pointResolution(8)
       .pointsMerge(false) // Keep points separate for click detection
 
+    // Add arcs data (flight paths)
+    globe
+      .arcsData(arcsData)
+      .arcStartLat((d: any) => d.startLat)
+      .arcStartLng((d: any) => d.startLng)
+      .arcEndLat((d: any) => d.endLat)
+      .arcEndLng((d: any) => d.endLng)
+      .arcColor((d: any) => d.color)
+      .arcAltitude(0.1)
+      .arcStroke(0.5)
+      .arcCircularResolution(64)
+      .arcsTransitionDuration(0)
+
     // Scale the globe
     globe.scale.set(100, 100, 100)
     
@@ -60,7 +79,7 @@ function Globe({ pointsData, countriesData, onPhotoClick }: {
         groupRef.current.remove(globe)
       }
     }
-  }, [pointsData, countriesData])
+  }, [pointsData, countriesData, arcsData])
 
   useEffect(() => {
     if (!globeRef.current || pointsData.length === 0) return
@@ -144,6 +163,7 @@ interface SceneProps {
 export default function Scene({ onPhotoClick }: SceneProps) {
   const [pointsData, setPointsData] = useState<GlobePoint[]>([])
   const [countriesData, setCountriesData] = useState([])
+  const [arcsData, setArcsData] = useState<FlightArc[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -203,6 +223,17 @@ export default function Scene({ onPhotoClick }: SceneProps) {
         setPointsData([])
       }
 
+      // Load flights data
+      try {
+        const flightsData = getFlightsData()
+        const flightArcs = transformFlightsToGlobeArcs(flightsData)
+        setArcsData(flightArcs)
+        console.log(`Loaded ${flightArcs.length} flight routes`)
+      } catch (err) {
+        console.warn('Failed to load flights data:', err instanceof Error ? err.message : 'Failed to load flights')
+        setArcsData([])
+      }
+
       // Load countries GeoJSON data
       try {
         const countriesResponse = await fetch('/ne_110m_admin_0_countries.geojson')
@@ -230,7 +261,7 @@ export default function Scene({ onPhotoClick }: SceneProps) {
       <ambientLight intensity={0.4} />
       <directionalLight position={[10, 10, 5]} intensity={1.2} />
       <directionalLight position={[-10, -10, -5]} intensity={0.3} />
-      <Globe pointsData={pointsData} countriesData={countriesData} onPhotoClick={onPhotoClick} />
+      <Globe pointsData={pointsData} countriesData={countriesData} arcsData={arcsData} onPhotoClick={onPhotoClick} />
       {/* Display loading/error state in console - could be enhanced with UI feedback */}
       {isLoading && console.log('Loading data...')}
       {error && console.log('Error loading data:', error)}
