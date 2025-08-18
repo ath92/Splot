@@ -59,7 +59,7 @@ function Globe({ pointsData, countriesData, arcsData, onPhotoClick }: {
       .arcEndLat((d: any) => d.endLat)
       .arcEndLng((d: any) => d.endLng)
       .arcColor((d: any) => d.color)
-      .arcAltitude(0.1)
+      .arcAltitude((d: any) => d.altitude) // Use dynamic altitude based on distance
       .arcStroke(0.5)
       .arcCircularResolution(64)
       .arcsTransitionDuration(0)
