@@ -9,6 +9,35 @@ import {
   type Photo 
 } from '../services/photoService'
 
+// Trip data interface for static JSON
+interface TripLocation {
+  name: string
+  country: string
+  region?: string
+  latitude: number
+  longitude: number
+  stayDuration?: string
+  description?: string
+}
+
+interface TripSegment {
+  id: string
+  from: TripLocation
+  to: TripLocation
+  startDate: string
+  endDate: string
+  type: 'flight' | 'ground'
+  hasFlight: boolean
+  notes?: string
+}
+
+interface TripData {
+  title: string
+  segments: TripSegment[]
+  locations: TripLocation[]
+  countries?: any[]
+}
+
 function Globe({ pointsData, countriesData, onPhotoClick }: { 
   pointsData: GlobePoint[], 
   countriesData: any[], 
@@ -17,8 +46,26 @@ function Globe({ pointsData, countriesData, onPhotoClick }: {
   const globeRef = useRef<ThreeGlobe | null>(null)
   const groupRef = useRef<THREE.Group>(null!)
   const { camera, gl, scene } = useThree()
+  const [tripData, setTripData] = useState<TripData | null>(null)
+
+  // Load trip data
+  useEffect(() => {
+    async function loadTripData() {
+      try {
+        const response = await fetch('/trip-data.json')
+        const data: TripData = await response.json()
+        setTripData(data)
+        console.log(`Loaded trip data with ${data.locations.length} locations and ${data.segments.length} segments`)
+      } catch (error) {
+        console.error('Failed to load trip data:', error)
+      }
+    }
+    loadTripData()
+  }, [])
 
   useEffect(() => {
+    if (!tripData) return
+
     // Create the globe instance with enhanced visuals
     const globe = new ThreeGlobe()
       .showAtmosphere(true)
@@ -35,15 +82,75 @@ function Globe({ pointsData, countriesData, onPhotoClick }: {
       .polygonStrokeColor(() => '#065f46')
       .polygonAltitude(0.01)
     
-    // Add points data
+    // Convert trip locations to globe points
+    const tripPoints = tripData.locations.map((location) => ({
+      lat: location.latitude,
+      lng: location.longitude,
+      size: 1,
+      color: '#feca57',
+      label: location.name
+    }))
+    
+    const combinedPoints = [...pointsData, ...tripPoints]
+    
+    // Add combined points data 
     globe
-      .pointsData(pointsData)
+      .pointsData(combinedPoints)
       .pointLat((d: any) => d.lat)
       .pointLng((d: any) => d.lng)
       .pointColor((d: any) => d.color)
       .pointRadius((d: any) => d.size * 0.5)
       .pointResolution(8)
       .pointsMerge(false) // Keep points separate for click detection
+
+    // Add trip route visualization
+    // Flight routes as arcs
+    const flightArcs = tripData.segments
+      .filter(segment => segment.type === 'flight')
+      .map(segment => ({
+        startLat: segment.from.latitude,
+        startLng: segment.from.longitude,
+        endLat: segment.to.latitude,
+        endLng: segment.to.longitude,
+        color: '#ff6b6b',
+        stroke: 2,
+        altitude: 0.3
+      }))
+
+    globe
+      .arcsData(flightArcs)
+      .arcStartLat((d: any) => d.startLat)
+      .arcStartLng((d: any) => d.startLng)
+      .arcEndLat((d: any) => d.endLat)
+      .arcEndLng((d: any) => d.endLng)
+      .arcColor((d: any) => d.color)
+      .arcStroke((d: any) => d.stroke)
+      .arcAltitude((d: any) => d.altitude)
+      .arcDashLength(0.9)
+      .arcDashGap(0.1)
+      .arcDashAnimateTime(1000)
+
+    // Ground routes as paths
+    const groundPaths = tripData.segments
+      .filter(segment => segment.type === 'ground')
+      .map(segment => ({
+        coords: [
+          [segment.from.longitude, segment.from.latitude], // lng, lat format for three-globe
+          [segment.to.longitude, segment.to.latitude]
+        ],
+        color: '#4ecdc4',
+        stroke: 3,
+        altitude: 0.01
+      }))
+
+    globe
+      .pathsData(groundPaths)
+      .pathPoints((d: any) => d.coords)
+      .pathPointLat((coord: any) => coord[1]) // lat is index 1
+      .pathPointLng((coord: any) => coord[0]) // lng is index 0
+      .pathColor((d: any) => d.color)
+      .pathStroke((d: any) => d.stroke)
+      .pathPointAlt(() => 0.01)
 
     // Scale the globe
     globe.scale.set(100, 100, 100)
@@ -60,7 +167,7 @@ function Globe({ pointsData, countriesData, onPhotoClick }: {
         groupRef.current.remove(globe)
       }
     }
-  }, [pointsData, countriesData])
+  }, [pointsData, countriesData, tripData])
 
   useEffect(() => {
     if (!globeRef.current || pointsData.length === 0) return

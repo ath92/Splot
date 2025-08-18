@@ -1,0 +1,694 @@
+{
+  "title": "Mini Retirement Trip 2025",
+  "segments": [
+    {
+      "id": "Xiamen-to-Guilin",
+      "from": {
+        "name": "Xiamen",
+        "country": "China",
+        "latitude": 24.4798,
+        "longitude": 118.0819
+      },
+      "to": {
+        "name": "Guilin",
+        "country": "China",
+        "latitude": 25.2736,
+        "longitude": 110.2906
+      },
+      "startDate": "April 3, 2025",
+      "endDate": "April 3, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Domestic flight from Xiamen to Guilin"
+    },
+    {
+      "id": "Guilin-to-Zhangjiajie",
+      "from": {
+        "name": "Guilin",
+        "country": "China",
+        "latitude": 25.2736,
+        "longitude": 110.2906
+      },
+      "to": {
+        "name": "Zhangjiajie",
+        "country": "China",
+        "latitude": 29.1274,
+        "longitude": 110.4788
+      },
+      "startDate": "April 6, 2025",
+      "endDate": "April 6, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "High-speed train from Guilin to Zhangjiajie"
+    },
+    {
+      "id": "Zhangjiajie-to-Xian",
+      "from": {
+        "name": "Zhangjiajie",
+        "country": "China",
+        "latitude": 29.1274,
+        "longitude": 110.4788
+      },
+      "to": {
+        "name": "Xi'an",
+        "country": "China",
+        "latitude": 34.3416,
+        "longitude": 108.9398
+      },
+      "startDate": "April 13, 2025",
+      "endDate": "April 13, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Travel from Zhangjiajie to Xi'an"
+    },
+    {
+      "id": "Xian-to-Beijing",
+      "from": {
+        "name": "Xi'an",
+        "country": "China",
+        "latitude": 34.3416,
+        "longitude": 108.9398
+      },
+      "to": {
+        "name": "Beijing",
+        "country": "China",
+        "latitude": 39.9042,
+        "longitude": 116.4074
+      },
+      "startDate": "April 13, 2025",
+      "endDate": "April 13, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "High-speed train from Xi'an to Beijing"
+    },
+    {
+      "id": "Beijing-to-Shanghai",
+      "from": {
+        "name": "Beijing",
+        "country": "China",
+        "latitude": 39.9042,
+        "longitude": 116.4074
+      },
+      "to": {
+        "name": "Shanghai",
+        "country": "China",
+        "latitude": 31.2304,
+        "longitude": 121.4737
+      },
+      "startDate": "April 17, 2025",
+      "endDate": "April 18, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Overnight train from Beijing to Shanghai"
+    },
+    {
+      "id": "Shanghai-to-Seoul",
+      "from": {
+        "name": "Shanghai",
+        "country": "China",
+        "latitude": 31.2304,
+        "longitude": 121.4737
+      },
+      "to": {
+        "name": "Seoul",
+        "country": "Korea",
+        "latitude": 37.5665,
+        "longitude": 126.9780
+      },
+      "startDate": "April 22, 2025",
+      "endDate": "April 22, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight from Shanghai to Seoul"
+    },
+    {
+      "id": "Seoul-to-Taipei",
+      "from": {
+        "name": "Seoul",
+        "country": "Korea",
+        "latitude": 37.5665,
+        "longitude": 126.9780
+      },
+      "to": {
+        "name": "Taipei",
+        "country": "Taiwan",
+        "latitude": 25.0330,
+        "longitude": 121.5654
+      },
+      "startDate": "May 6, 2025",
+      "endDate": "May 6, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight from Seoul to Taipei"
+    },
+    {
+      "id": "Taipei-to-Hanoi",
+      "from": {
+        "name": "Taipei",
+        "country": "Taiwan",
+        "latitude": 25.0330,
+        "longitude": 121.5654
+      },
+      "to": {
+        "name": "Hanoi",
+        "country": "Vietnam",
+        "latitude": 21.0285,
+        "longitude": 105.8542
+      },
+      "startDate": "May 16, 2025",
+      "endDate": "May 16, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight from Taichung to Hanoi"
+    },
+    {
+      "id": "Hanoi-to-Da-Nang",
+      "from": {
+        "name": "Hanoi",
+        "country": "Vietnam",
+        "latitude": 21.0285,
+        "longitude": 105.8542
+      },
+      "to": {
+        "name": "Da Nang",
+        "country": "Vietnam",
+        "latitude": 16.0544,
+        "longitude": 108.2022
+      },
+      "startDate": "May 31, 2025",
+      "endDate": "May 31, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight from Hanoi to Da Nang"
+    },
+    {
+      "id": "Da-Nang-to-Kota-Bharu",
+      "from": {
+        "name": "Da Nang",
+        "country": "Vietnam",
+        "latitude": 16.0544,
+        "longitude": 108.2022
+      },
+      "to": {
+        "name": "Kota Bharu",
+        "country": "Malaysia",
+        "latitude": 6.1254,
+        "longitude": 102.2381
+      },
+      "startDate": "June 11, 2025",
+      "endDate": "June 11, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight from Da Nang to Kota Bharu"
+    },
+    {
+      "id": "Kota-Bharu-to-Penang",
+      "from": {
+        "name": "Kota Bharu",
+        "country": "Malaysia",
+        "latitude": 6.1254,
+        "longitude": 102.2381
+      },
+      "to": {
+        "name": "Penang",
+        "country": "Malaysia",
+        "latitude": 5.4164,
+        "longitude": 100.3327
+      },
+      "startDate": "June 16, 2025",
+      "endDate": "June 16, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Bus from Kuala Besut to Penang"
+    },
+    {
+      "id": "Penang-to-Kuala-Lumpur",
+      "from": {
+        "name": "Penang",
+        "country": "Malaysia",
+        "latitude": 5.4164,
+        "longitude": 100.3327
+      },
+      "to": {
+        "name": "Kuala Lumpur",
+        "country": "Malaysia",
+        "latitude": 3.1390,
+        "longitude": 101.6869
+      },
+      "startDate": "June 29, 2025",
+      "endDate": "June 29, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight from Penang to Kuala Lumpur"
+    },
+    {
+      "id": "Kuala-Lumpur-to-Jakarta",
+      "from": {
+        "name": "Kuala Lumpur",
+        "country": "Malaysia",
+        "latitude": 3.1390,
+        "longitude": 101.6869
+      },
+      "to": {
+        "name": "Jakarta",
+        "country": "Indonesia",
+        "latitude": -6.2088,
+        "longitude": 106.8456
+      },
+      "startDate": "June 30, 2025",
+      "endDate": "June 30, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight from Kuala Lumpur to Jakarta"
+    },
+    {
+      "id": "Jakarta-to-Singapore",
+      "from": {
+        "name": "Jakarta",
+        "country": "Indonesia",
+        "latitude": -6.2088,
+        "longitude": 106.8456
+      },
+      "to": {
+        "name": "Singapore",
+        "country": "Singapore",
+        "latitude": 1.3521,
+        "longitude": 103.8198
+      },
+      "startDate": "July 27, 2025",
+      "endDate": "July 27, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight from Jakarta to Singapore"
+    },
+    {
+      "id": "Singapore-to-London",
+      "from": {
+        "name": "Singapore",
+        "country": "Singapore",
+        "latitude": 1.3521,
+        "longitude": 103.8198
+      },
+      "to": {
+        "name": "London",
+        "country": "United Kingdom",
+        "latitude": 51.5074,
+        "longitude": -0.1278
+      },
+      "startDate": "July 30, 2025",
+      "endDate": "August 3, 2025",
+      "type": "flight",
+      "hasFlight": true,
+      "notes": "Flight from Singapore to London via Guangzhou"
+    },
+    {
+      "id": "London-to-Amsterdam",
+      "from": {
+        "name": "London",
+        "country": "United Kingdom",
+        "latitude": 51.5074,
+        "longitude": -0.1278
+      },
+      "to": {
+        "name": "Amsterdam",
+        "country": "Netherlands",
+        "latitude": 52.3676,
+        "longitude": 4.9041
+      },
+      "startDate": "August 4, 2025",
+      "endDate": "August 4, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Ferry/train from London to Amsterdam"
+    },
+    {
+      "id": "Amsterdam-to-Bergamo",
+      "from": {
+        "name": "Amsterdam",
+        "country": "Netherlands",
+        "latitude": 52.3676,
+        "longitude": 4.9041
+      },
+      "to": {
+        "name": "Bergamo",
+        "country": "Italy",
+        "latitude": 45.6983,
+        "longitude": 9.6773
+      },
+      "startDate": "August 7, 2025",
+      "endDate": "August 31, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Drive from Amsterdam to Bergamo"
+    },
+    {
+      "id": "Bergamo-to-Bari",
+      "from": {
+        "name": "Bergamo",
+        "country": "Italy",
+        "latitude": 45.6983,
+        "longitude": 9.6773
+      },
+      "to": {
+        "name": "Bari",
+        "country": "Italy",
+        "region": "Puglia",
+        "latitude": 41.1171,
+        "longitude": 16.8719
+      },
+      "startDate": "September 5, 2025",
+      "endDate": "September 6, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Drive from Bergamo to Bari (Puglia)"
+    },
+    {
+      "id": "Bari-to-San-Marino",
+      "from": {
+        "name": "Bari",
+        "country": "Italy",
+        "region": "Puglia",
+        "latitude": 41.1171,
+        "longitude": 16.8719
+      },
+      "to": {
+        "name": "San Marino",
+        "country": "San Marino",
+        "latitude": 43.9333,
+        "longitude": 12.4667
+      },
+      "startDate": "September 19, 2025",
+      "endDate": "September 20, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Drive from Bari to San Marino"
+    },
+    {
+      "id": "San-Marino-to-Reggio-Calabria",
+      "from": {
+        "name": "San Marino",
+        "country": "San Marino",
+        "latitude": 43.9333,
+        "longitude": 12.4667
+      },
+      "to": {
+        "name": "Reggio Calabria",
+        "country": "Italy",
+        "latitude": 38.1097,
+        "longitude": 15.6547
+      },
+      "startDate": "September 23, 2025",
+      "endDate": "September 24, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Drive from San Marino to Reggio Calabria"
+    },
+    {
+      "id": "Reggio-Calabria-to-Bergamo",
+      "from": {
+        "name": "Reggio Calabria",
+        "country": "Italy",
+        "latitude": 38.1097,
+        "longitude": 15.6547
+      },
+      "to": {
+        "name": "Bergamo",
+        "country": "Italy",
+        "latitude": 45.6983,
+        "longitude": 9.6773
+      },
+      "startDate": "September 26, 2025",
+      "endDate": "September 26, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Drive from Reggio Calabria back to Bergamo"
+    },
+    {
+      "id": "Bergamo-to-Ommen",
+      "from": {
+        "name": "Bergamo",
+        "country": "Italy",
+        "latitude": 45.6983,
+        "longitude": 9.6773
+      },
+      "to": {
+        "name": "Ommen",
+        "country": "Netherlands",
+        "latitude": 52.5167,
+        "longitude": 6.4167
+      },
+      "startDate": "September 27, 2025",
+      "endDate": "September 28, 2025",
+      "type": "ground",
+      "hasFlight": false,
+      "notes": "Drive from Bergamo to Ommen"
+    }
+  ],
+  "locations": [
+    {
+      "name": "Xiamen",
+      "country": "China",
+      "latitude": 24.4798,
+      "longitude": 118.0819,
+      "stayDuration": "April 1 - April 3, 2025",
+      "description": "Coastal city in Fujian province, starting point of China journey"
+    },
+    {
+      "name": "Guilin",
+      "country": "China",
+      "latitude": 25.2736,
+      "longitude": 110.2906,
+      "stayDuration": "April 3 - April 6, 2025",
+      "description": "Famous for karst landscape and Li River scenery"
+    },
+    {
+      "name": "Zhangjiajie",
+      "country": "China",
+      "latitude": 29.1274,
+      "longitude": 110.4788,
+      "stayDuration": "April 6 - April 13, 2025",
+      "description": "National Forest Park with unique pillar rock formations"
+    },
+    {
+      "name": "Xi'an",
+      "country": "China",
+      "latitude": 34.3416,
+      "longitude": 108.9398,
+      "stayDuration": "April 13, 2025",
+      "description": "Ancient capital and home of the Terracotta Army"
+    },
+    {
+      "name": "Beijing",
+      "country": "China",
+      "latitude": 39.9042,
+      "longitude": 116.4074,
+      "stayDuration": "April 13 - April 17, 2025",
+      "description": "Capital city of China"
+    },
+    {
+      "name": "Shanghai",
+      "country": "China",
+      "latitude": 31.2304,
+      "longitude": 121.4737,
+      "stayDuration": "April 18 - April 22, 2025",
+      "description": "Largest city in China, includes visits to Suzhou"
+    },
+    {
+      "name": "Seoul",
+      "country": "Korea",
+      "latitude": 37.5665,
+      "longitude": 126.9780,
+      "stayDuration": "April 22 - May 6, 2025",
+      "description": "Capital city of South Korea"
+    },
+    {
+      "name": "Taipei",
+      "country": "Taiwan", 
+      "latitude": 25.0330,
+      "longitude": 121.5654,
+      "stayDuration": "May 6 - May 16, 2025",
+      "description": "Capital city of Taiwan"
+    },
+    {
+      "name": "Hanoi",
+      "country": "Vietnam",
+      "latitude": 21.0285,
+      "longitude": 105.8542,
+      "stayDuration": "May 16 - May 31, 2025",
+      "description": "Capital city of Vietnam, includes trips to Ha Giang and Sa Pa"
+    },
+    {
+      "name": "Da Nang",
+      "country": "Vietnam",
+      "latitude": 16.0544,
+      "longitude": 108.2022,
+      "stayDuration": "May 31 - June 11, 2025",
+      "description": "Central Vietnam, includes Hoi An and Hue"
+    },
+    {
+      "name": "Kota Bharu",
+      "country": "Malaysia",
+      "latitude": 6.1254,
+      "longitude": 102.2381,
+      "stayDuration": "June 11 - June 16, 2025",
+      "description": "Eastern Malaysia, includes Perhentian Islands"
+    },
+    {
+      "name": "Penang",
+      "country": "Malaysia",
+      "latitude": 5.4164,
+      "longitude": 100.3327,
+      "stayDuration": "June 16 - June 29, 2025",
+      "description": "Island state in Malaysia, UNESCO World Heritage Georgetown"
+    },
+    {
+      "name": "Kuala Lumpur",
+      "country": "Malaysia",
+      "latitude": 3.1390,
+      "longitude": 101.6869,
+      "stayDuration": "June 29 - June 30, 2025",
+      "description": "Capital city of Malaysia"
+    },
+    {
+      "name": "Jakarta",
+      "country": "Indonesia",
+      "latitude": -6.2088,
+      "longitude": 106.8456,
+      "stayDuration": "June 30 - July 27, 2025",
+      "description": "Capital city of Indonesia"
+    },
+    {
+      "name": "Singapore",
+      "country": "Singapore",
+      "latitude": 1.3521,
+      "longitude": 103.8198,
+      "stayDuration": "July 27 - July 30, 2025",
+      "description": "City-state in Southeast Asia"
+    },
+    {
+      "name": "London",
+      "country": "United Kingdom",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "stayDuration": "August 3 - August 4, 2025",
+      "description": "Capital city of the United Kingdom"
+    },
+    {
+      "name": "Amsterdam",
+      "country": "Netherlands",
+      "latitude": 52.3676,
+      "longitude": 4.9041,
+      "stayDuration": "August 4 - August 7, 2025",
+      "description": "Capital city of the Netherlands"
+    },
+    {
+      "name": "Bergamo",
+      "country": "Italy",
+      "latitude": 45.6983,
+      "longitude": 9.6773,
+      "stayDuration": "August 31 - September 5, 2025",
+      "description": "City in Lombardy, Northern Italy"
+    },
+    {
+      "name": "Bari",
+      "country": "Italy",
+      "region": "Puglia",
+      "latitude": 41.1171,
+      "longitude": 16.8719,
+      "stayDuration": "September 6 - September 19, 2025",
+      "description": "Capital city of Puglia region"
+    },
+    {
+      "name": "San Marino",
+      "country": "San Marino",
+      "latitude": 43.9333,
+      "longitude": 12.4667,
+      "stayDuration": "September 20 - September 23, 2025",
+      "description": "Microstate in Southern Europe"
+    },
+    {
+      "name": "Reggio Calabria",
+      "country": "Italy",
+      "latitude": 38.1097,
+      "longitude": 15.6547,
+      "stayDuration": "September 24 - September 26, 2025",
+      "description": "City in Calabria, Southern Italy"
+    },
+    {
+      "name": "Ommen",
+      "country": "Netherlands",
+      "latitude": 52.5167,
+      "longitude": 6.4167,
+      "stayDuration": "September 28 - October 1, 2025",
+      "description": "Town in Overijssel province"
+    }
+  ],
+  "countries": [
+    {
+      "name": "China",
+      "cities": ["Xiamen", "Guilin", "Zhangjiajie", "Xi'an", "Beijing", "Shanghai"],
+      "mainCity": "Beijing",
+      "coordinates": { "latitude": 39.9042, "longitude": 116.4074 }
+    },
+    {
+      "name": "Korea",
+      "cities": ["Seoul"],
+      "mainCity": "Seoul",
+      "coordinates": { "latitude": 37.5665, "longitude": 126.9780 }
+    },
+    {
+      "name": "Taiwan",
+      "cities": ["Taipei"],
+      "mainCity": "Taipei",
+      "coordinates": { "latitude": 25.0330, "longitude": 121.5654 }
+    },
+    {
+      "name": "Vietnam",
+      "cities": ["Hanoi", "Da Nang", "Hoi An", "Hue"],
+      "mainCity": "Hanoi",
+      "coordinates": { "latitude": 21.0285, "longitude": 105.8542 }
+    },
+    {
+      "name": "Malaysia",
+      "cities": ["Kota Bharu", "Penang", "Kuala Lumpur"],
+      "mainCity": "Kuala Lumpur",
+      "coordinates": { "latitude": 3.1390, "longitude": 101.6869 }
+    },
+    {
+      "name": "Indonesia",
+      "cities": ["Jakarta"],
+      "mainCity": "Jakarta",
+      "coordinates": { "latitude": -6.2088, "longitude": 106.8456 }
+    },
+    {
+      "name": "Singapore",
+      "cities": ["Singapore"],
+      "mainCity": "Singapore",
+      "coordinates": { "latitude": 1.3521, "longitude": 103.8198 }
+    },
+    {
+      "name": "United Kingdom",
+      "cities": ["London"],
+      "mainCity": "London",
+      "coordinates": { "latitude": 51.5074, "longitude": -0.1278 }
+    },
+    {
+      "name": "Netherlands",
+      "cities": ["Amsterdam", "Ommen"],
+      "mainCity": "Amsterdam",
+      "coordinates": { "latitude": 52.3676, "longitude": 4.9041 }
+    },
+    {
+      "name": "Italy",
+      "cities": ["Bergamo", "Bari", "Reggio Calabria"],
+      "mainCity": "Rome",
+      "coordinates": { "latitude": 41.9028, "longitude": 12.4964 }
+    },
+    {
+      "name": "San Marino",
+      "cities": ["San Marino"],
+      "mainCity": "San Marino",
+      "coordinates": { "latitude": 43.9333, "longitude": 12.4667 }
+    }
+  ]
+}
