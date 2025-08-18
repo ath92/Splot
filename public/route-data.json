@@ -1,0 +1,276 @@
+{
+  "routes": [
+    {
+      "id": "ams-pvg",
+      "name": "Amsterdam to Shanghai",
+      "type": "flight",
+      "startLocation": {
+        "name": "Amsterdam",
+        "lat": 52.3676,
+        "lng": 4.9041
+      },
+      "endLocation": {
+        "name": "Shanghai",
+        "lat": 31.2304,
+        "lng": 121.4737
+      },
+      "startDate": "2025-04-01",
+      "endDate": "2025-04-01"
+    },
+    {
+      "id": "pvg-icn",
+      "name": "Shanghai to Seoul",
+      "type": "flight",
+      "startLocation": {
+        "name": "Shanghai",
+        "lat": 31.2304,
+        "lng": 121.4737
+      },
+      "endLocation": {
+        "name": "Seoul",
+        "lat": 37.5665,
+        "lng": 126.9780
+      },
+      "startDate": "2025-04-22",
+      "endDate": "2025-04-22"
+    },
+    {
+      "id": "icn-tpe",
+      "name": "Seoul to Taipei",
+      "type": "flight",
+      "startLocation": {
+        "name": "Seoul",
+        "lat": 37.5665,
+        "lng": 126.9780
+      },
+      "endLocation": {
+        "name": "Taipei",
+        "lat": 25.0330,
+        "lng": 121.5654
+      },
+      "startDate": "2025-05-06",
+      "endDate": "2025-05-06"
+    },
+    {
+      "id": "tpe-sgn",
+      "name": "Taipei to Ho Chi Minh City",
+      "type": "flight",
+      "startLocation": {
+        "name": "Taipei",
+        "lat": 25.0330,
+        "lng": 121.5654
+      },
+      "endLocation": {
+        "name": "Ho Chi Minh City",
+        "lat": 10.8231,
+        "lng": 106.6297
+      },
+      "startDate": "2025-05-16",
+      "endDate": "2025-05-16"
+    },
+    {
+      "id": "sgn-kul",
+      "name": "Ho Chi Minh City to Kuala Lumpur",
+      "type": "flight",
+      "startLocation": {
+        "name": "Ho Chi Minh City",
+        "lat": 10.8231,
+        "lng": 106.6297
+      },
+      "endLocation": {
+        "name": "Kuala Lumpur",
+        "lat": 3.1390,
+        "lng": 101.6869
+      },
+      "startDate": "2025-06-11",
+      "endDate": "2025-06-11"
+    },
+    {
+      "id": "kul-jkt",
+      "name": "Kuala Lumpur to Jakarta",
+      "type": "flight",
+      "startLocation": {
+        "name": "Kuala Lumpur",
+        "lat": 3.1390,
+        "lng": 101.6869
+      },
+      "endLocation": {
+        "name": "Jakarta",
+        "lat": -6.2088,
+        "lng": 106.8456
+      },
+      "startDate": "2025-06-30",
+      "endDate": "2025-06-30"
+    },
+    {
+      "id": "jkt-sin",
+      "name": "Jakarta to Singapore",
+      "type": "flight",
+      "startLocation": {
+        "name": "Jakarta",
+        "lat": -6.2088,
+        "lng": 106.8456
+      },
+      "endLocation": {
+        "name": "Singapore",
+        "lat": 1.3521,
+        "lng": 103.8198
+      },
+      "startDate": "2025-07-27",
+      "endDate": "2025-07-27"
+    },
+    {
+      "id": "sin-lhr",
+      "name": "Singapore to London",
+      "type": "flight",
+      "startLocation": {
+        "name": "Singapore",
+        "lat": 1.3521,
+        "lng": 103.8198
+      },
+      "endLocation": {
+        "name": "London",
+        "lat": 51.5074,
+        "lng": -0.1278
+      },
+      "startDate": "2025-08-03",
+      "endDate": "2025-08-03"
+    },
+    {
+      "id": "lhr-ams",
+      "name": "London to Amsterdam",
+      "type": "flight",
+      "startLocation": {
+        "name": "London",
+        "lat": 51.5074,
+        "lng": -0.1278
+      },
+      "endLocation": {
+        "name": "Amsterdam",
+        "lat": 52.3676,
+        "lng": 4.9041
+      },
+      "startDate": "2025-08-04",
+      "endDate": "2025-08-04"
+    },
+    {
+      "id": "ams-ommen",
+      "name": "Amsterdam to Ommen",
+      "type": "ground",
+      "startLocation": {
+        "name": "Amsterdam",
+        "lat": 52.3676,
+        "lng": 4.9041
+      },
+      "endLocation": {
+        "name": "Ommen",
+        "lat": 52.5161,
+        "lng": 6.4214
+      },
+      "startDate": "2025-08-04",
+      "endDate": "2025-08-04"
+    },
+    {
+      "id": "ommen-bergamo",
+      "name": "Ommen to Bergamo",
+      "type": "ground",
+      "startLocation": {
+        "name": "Ommen",
+        "lat": 52.5161,
+        "lng": 6.4214
+      },
+      "endLocation": {
+        "name": "Bergamo",
+        "lat": 45.6982,
+        "lng": 9.6773
+      },
+      "startDate": "2025-08-31",
+      "endDate": "2025-08-31"
+    },
+    {
+      "id": "bergamo-puglia",
+      "name": "Bergamo to Puglia",
+      "type": "ground",
+      "startLocation": {
+        "name": "Bergamo",
+        "lat": 45.6982,
+        "lng": 9.6773
+      },
+      "endLocation": {
+        "name": "Puglia",
+        "lat": 40.8564,
+        "lng": 16.8728
+      },
+      "startDate": "2025-09-06",
+      "endDate": "2025-09-06"
+    },
+    {
+      "id": "puglia-sanmarino",
+      "name": "Puglia to San Marino",
+      "type": "ground",
+      "startLocation": {
+        "name": "Puglia",
+        "lat": 40.8564,
+        "lng": 16.8728
+      },
+      "endLocation": {
+        "name": "San Marino",
+        "lat": 43.9424,
+        "lng": 12.4578
+      },
+      "startDate": "2025-09-20",
+      "endDate": "2025-09-20"
+    },
+    {
+      "id": "sanmarino-reggio",
+      "name": "San Marino to Reggio Calabria",
+      "type": "ground",
+      "startLocation": {
+        "name": "San Marino",
+        "lat": 43.9424,
+        "lng": 12.4578
+      },
+      "endLocation": {
+        "name": "Reggio Calabria",
+        "lat": 38.1067,
+        "lng": 15.6479
+      },
+      "startDate": "2025-09-24",
+      "endDate": "2025-09-24"
+    },
+    {
+      "id": "reggio-bergamo",
+      "name": "Reggio Calabria to Bergamo",
+      "type": "ground",
+      "startLocation": {
+        "name": "Reggio Calabria",
+        "lat": 38.1067,
+        "lng": 15.6479
+      },
+      "endLocation": {
+        "name": "Bergamo",
+        "lat": 45.6982,
+        "lng": 9.6773
+      },
+      "startDate": "2025-09-26",
+      "endDate": "2025-09-26"
+    },
+    {
+      "id": "bergamo-ommen",
+      "name": "Bergamo to Ommen",
+      "type": "ground",
+      "startLocation": {
+        "name": "Bergamo",
+        "lat": 45.6982,
+        "lng": 9.6773
+      },
+      "endLocation": {
+        "name": "Ommen",
+        "lat": 52.5161,
+        "lng": 6.4214
+      },
+      "startDate": "2025-09-27",
+      "endDate": "2025-09-28"
+    }
+  ]
+}
