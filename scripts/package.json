@@ -1,0 +1,16 @@
+{
+  "name": "splot-tile-generator",
+  "version": "1.0.0",
+  "description": "Generate protomaps pmtiles for Splot",
+  "type": "module",
+  "scripts": {
+    "generate": "node generate-tiles.js",
+    "upload": "node upload-tiles.js"
+  },
+  "dependencies": {
+    "pmtiles": "^3.2.0",
+    "@aws-sdk/client-s3": "^3.716.0",
+    "protomaps": "^2.0.0",
+    "node-fetch": "^3.3.2"
+  }
+}

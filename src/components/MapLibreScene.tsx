@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Feature, FeatureCollection } from 'geojson'
+import { Protocol } from 'pmtiles'
 import { 
   fetchPhotos, 
   type Photo 
@@ -9,6 +10,7 @@ import {
 import { 
   getFlightsData
 } from '../services/flightsService'
+import { createProtomapsStyle } from '../services/mapStyleService'
 
 interface MapLibreSceneProps {
   onPhotoClick: (photo: Photo) => void
@@ -27,10 +29,31 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight)
 
     try {
-      // Try the most minimal possible MapLibre setup
+      // Register pmtiles protocol
+      const protocol = new Protocol();
+      maplibregl.addProtocol('pmtiles', protocol.tile);
+      console.log('PMTiles protocol registered');
+      
+      // Configuration for custom pmtiles
+      const PMTILES_URL = import.meta.env.VITE_PMTILES_URL || 
+        'https://0269140aa6c636355368c840cf5a95b0.r2.cloudflarestorage.com/tiles/world-tiles.pmtiles';
+      
+      console.log('Using pmtiles URL:', PMTILES_URL);
+      
+      // Try to use custom protomaps style first, fallback to demo tiles
+      let mapStyle: string | object;
+      try {
+        mapStyle = createProtomapsStyle(PMTILES_URL);
+        console.log('Using custom protomaps style');
+      } catch (styleError) {
+        console.warn('Failed to create custom style, falling back to demo tiles:', styleError);
+        mapStyle = 'https://demotiles.maplibre.org/style.json';
+      }
+      
+      // Initialize MapLibre map
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: 'https://demotiles.maplibre.org/style.json',
+        style: mapStyle as any, // Type assertion for custom style
         center: [0, 0],
         zoom: 1
       })
@@ -167,7 +190,9 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     }
 
     return () => {
-      map.current?.remove()
+      map.current?.remove();
+      // Clean up pmtiles protocol
+      maplibregl.removeProtocol('pmtiles');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // loadData is intentionally not in dependencies to avoid recreation
