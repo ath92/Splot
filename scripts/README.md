@@ -22,8 +22,9 @@ The system generates world vector tiles from protomaps.com data, optimized for t
 ### Prerequisites
 
 1. Node.js 18+
-2. CF_WORKERS environment variable with Cloudflare API token
-3. R2 bucket named "tiles" created in Cloudflare dashboard
+2. **PMTiles CLI tool** - Download from [protomaps/go-pmtiles releases](https://github.com/protomaps/go-pmtiles/releases)
+3. CF_WORKERS environment variable with Cloudflare API token
+4. R2 bucket named "tiles" created in Cloudflare dashboard
 
 ### Manual Generation
 
@@ -31,7 +32,12 @@ The system generates world vector tiles from protomaps.com data, optimized for t
 # Install dependencies
 npm install
 
-# Generate tiles (creates world-tiles.pmtiles ~3GB)
+# Install pmtiles CLI (Linux x64 example)
+curl -L https://github.com/protomaps/go-pmtiles/releases/download/v1.28.0/go-pmtiles_1.28.0_Linux_x86_64.tar.gz -o pmtiles.tar.gz
+tar -xzf pmtiles.tar.gz
+sudo mv pmtiles /usr/local/bin/
+
+# Generate tiles with proper zoom level extraction
 node generate-tiles.js
 
 # Upload to R2
@@ -65,9 +71,20 @@ Environment variables:
 
 ## Troubleshooting
 
+## Technical Details
+
+The tile generation process:
+
+1. **Uses pmtiles CLI** to properly extract tiles from source data
+2. **Applies maxzoom filtering** via `pmtiles extract --maxzoom N` command
+3. **Downloads only required tiles** for specified zoom levels (not partial file downloads)
+4. **Outputs PMTiles format** optimized for random access and efficient serving
+5. **Automatic size management** through zoom level limitation
+
 ### File Too Large
-- Reduce `ZOOM_LIMIT` in generate-tiles.js
-- Current limit of 8 produces ~3GB file
+- Reduce `ZOOM_LIMIT` in generate-tiles.js or via environment variable
+- Each zoom level approximately doubles the file size
+- Zoom level 8 typically produces ~3GB file for world coverage
 
 ### Upload Failures
 - Verify CF_WORKERS token has R2 permissions

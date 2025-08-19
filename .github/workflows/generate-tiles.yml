@@ -33,12 +33,17 @@ jobs:
           cd scripts
           npm install
           
+      - name: Install pmtiles CLI
+        run: |
+          curl -L https://github.com/protomaps/go-pmtiles/releases/download/v1.28.0/go-pmtiles_1.28.0_Linux_x86_64.tar.gz -o pmtiles.tar.gz
+          tar -xzf pmtiles.tar.gz
+          sudo mv pmtiles /usr/local/bin/
+          pmtiles version
+          
       - name: Generate tiles
         run: |
           cd scripts
-          node generate-tiles.js
-        env:
-          ZOOM_LIMIT: ${{ github.event.inputs.zoom_limit || '8' }}
+          ZOOM_LIMIT=${{ github.event.inputs.zoom_limit || '8' }} node generate-tiles.js
           
       - name: Check file size
         run: |

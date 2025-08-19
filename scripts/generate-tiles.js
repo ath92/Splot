@@ -1,89 +1,68 @@
 #!/usr/bin/env node
 
 import fs from 'fs/promises';
-import { PMTiles, TileType, Compression } from 'pmtiles';
+import { spawn } from 'child_process';
 
 /**
  * Generate protomaps pmtiles from OpenStreetMap data
- * Limited to zoom levels 0-8 to keep file size under 3GB
+ * Uses pmtiles CLI with maxzoom flag to properly limit zoom levels
  */
 
-const ZOOM_LIMIT = 8; // Conservative limit to stay under 3GB
+const ZOOM_LIMIT = parseInt(process.env.ZOOM_LIMIT) || 8; // Conservative limit, configurable via env var
 const OUTPUT_FILE = 'world-tiles.pmtiles';
+
+/**
+ * Execute a command and return a promise
+ */
+function executeCommand(command, args = []) {
+  return new Promise((resolve, reject) => {
+    console.log(`Executing: ${command} ${args.join(' ')}`);
+    
+    const process = spawn(command, args, {
+      stdio: 'inherit',
+      shell: false
+    });
+    
+    process.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Command failed with exit code ${code}`));
+      }
+    });
+    
+    process.on('error', (error) => {
+      reject(error);
+    });
+  });
+}
 
 async function generateTiles() {
   console.log('Starting protomaps tile generation...');
-  console.log(`Zoom limit: ${ZOOM_LIMIT}`);
+  console.log(`Maximum zoom level: ${ZOOM_LIMIT}`);
   console.log(`Output file: ${OUTPUT_FILE}`);
   
   try {
-    // Use a smaller, more manageable source
-    // This is a lower zoom level world tiles that should be much smaller
+    // Source URL for protomaps world tiles
     const sourceUrl = 'https://build.protomaps.com/20240101.pmtiles';
     
-    console.log('Downloading source pmtiles file...');
-    console.log('Note: This may take several minutes depending on file size...');
+    console.log('Extracting tiles with pmtiles CLI...');
+    console.log('This will download only the tiles needed for the specified zoom levels.');
     
-    const response = await fetch(sourceUrl);
+    // Use pmtiles extract command with maxzoom flag
+    await executeCommand('pmtiles', [
+      'extract',
+      sourceUrl,
+      OUTPUT_FILE,
+      '--maxzoom', ZOOM_LIMIT.toString()
+    ]);
     
-    if (!response.ok) {
-      throw new Error(`Failed to fetch source tiles: ${response.statusText}`);
-    }
-    
-    // Stream to file to handle large downloads
-    const fileHandle = await fs.open(OUTPUT_FILE, 'w');
-    const writer = fileHandle.createWriteStream();
-    
-    if (!response.body) {
-      throw new Error('No response body');
-    }
-    
-    const reader = response.body.getReader();
-    let downloadedBytes = 0;
-    const maxBytes = 3 * 1024 * 1024 * 1024; // 3GB limit
-    
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) break;
-        
-        downloadedBytes += value.length;
-        
-        // Stop if we're approaching the size limit
-        if (downloadedBytes > maxBytes) {
-          console.log('Reached size limit, stopping download...');
-          break;
-        }
-        
-        writer.write(value);
-        
-        // Progress indicator
-        if (downloadedBytes % (100 * 1024 * 1024) === 0) {
-          console.log(`Downloaded: ${(downloadedBytes / (1024 * 1024)).toFixed(0)} MB`);
-        }
-      }
-    } finally {
-      reader.releaseLock();
-      writer.end();
-      await fileHandle.close();
-    }
-    
-    console.log(`Download complete: ${(downloadedBytes / (1024 * 1024)).toFixed(0)} MB`);
-    
-    // Verify the file
+    // Verify the generated file
     const stats = await fs.stat(OUTPUT_FILE);
     const sizeGB = stats.size / (1024 * 1024 * 1024);
     console.log(`Final file size: ${sizeGB.toFixed(2)} GB`);
     
-    if (sizeGB > 3) {
-      console.warn('Warning: File size exceeds 3GB target');
-      console.log('Consider using a smaller source or implementing tile filtering');
-    } else {
-      console.log('✓ File size is within target range');
-    }
-    
-    console.log(`Generated ${OUTPUT_FILE} successfully`);
+    console.log(`✓ Generated ${OUTPUT_FILE} successfully with zoom levels 0-${ZOOM_LIMIT}`);
     
   } catch (error) {
     console.error('Error generating tiles:', error);

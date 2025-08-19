@@ -8,9 +8,13 @@
     "upload": "node upload-tiles.js"
   },
   "dependencies": {
-    "pmtiles": "^3.2.0",
-    "@aws-sdk/client-s3": "^3.716.0",
-    "protomaps": "^2.0.0",
-    "node-fetch": "^3.3.2"
+    "@aws-sdk/client-s3": "^3.716.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "notes": {
+    "pmtiles-cli": "Requires pmtiles CLI tool (go-pmtiles) to be installed. Download from https://github.com/protomaps/go-pmtiles/releases"
   }
 }
