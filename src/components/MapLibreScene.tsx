@@ -24,28 +24,12 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
     console.log('Initializing MapLibre map, container:', mapContainer.current)
 
-    const loadDataCallback = async () => {
-      await loadData()
-    }
-
     try {
-      // Initialize the map with minimal style
+      // Initialize the map with absolute minimal configuration to debug
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: {
-          version: 8,
-          sources: {},
-          layers: [
-            {
-              id: 'background',
-              type: 'background',
-              paint: {
-                'background-color': '#1a202c'
-              }
-            }
-          ]
-        },
-        center: [0, 30],
+        style: 'https://demotiles.maplibre.org/style.json', // Use a working style
+        center: [0, 20],
         zoom: 2
       })
 
@@ -54,8 +38,34 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       // Add navigation controls
       map.current.addControl(new maplibregl.NavigationControl(), 'top-right')
 
-      // Load data immediately (don't wait for load event)
-      loadDataCallback()
+      // Wait for map to be loaded before adding data
+      map.current.on('load', async () => {
+        console.log('Map fully loaded, loading data...')
+        await loadData()
+      })
+
+      // Fallback: if load event doesn't fire, try after a timeout
+      setTimeout(async () => {
+        console.log('Timeout fallback: loading data...')
+        await loadData()
+      }, 3000)
+
+      // Add debug events
+      map.current.on('styledata', () => {
+        console.log('Map style loaded successfully')
+      })
+
+      map.current.on('error', (e) => {
+        console.error('Map error:', e)
+      })
+
+      map.current.on('tiledataloading', () => {
+        console.log('Loading tiles...')
+      })
+
+      map.current.on('data', (e) => {
+        console.log('Map data event:', e.type, e.dataType)
+      })
 
     } catch (err) {
       console.error('Failed to initialize MapLibre:', err)
@@ -168,40 +178,79 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
     console.log('Adding photo markers:', photos.length)
 
-    photos.forEach((photo, index) => {
-      // Create a marker element
-      const el = document.createElement('div')
-      el.className = 'photo-marker'
-      el.style.backgroundColor = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'][index % 5]
-      el.style.width = '20px'  // Make markers bigger
-      el.style.height = '20px'
-      el.style.borderRadius = '50%'
-      el.style.border = '3px solid white'
-      el.style.cursor = 'pointer'
-      el.style.boxShadow = '0 3px 6px rgba(0,0,0,0.5)'
-      el.style.zIndex = '1000'
+    // Create GeoJSON source for photo markers
+    const photoFeatures = photos.map((photo, index) => ({
+      type: 'Feature',
+      properties: {
+        photo: JSON.stringify(photo), // Store photo data for click handling
+        color: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'][index % 5],
+        index: index
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: [photo.location.longitude, photo.location.latitude]
+      }
+    }))
 
-      console.log(`Creating marker ${index} at`, [photo.location.longitude, photo.location.latitude])
-
-      // Add click handler
-      el.addEventListener('click', () => {
-        console.log('Photo marker clicked:', photo.originalName)
-        onPhotoClick(photo)
-      })
-
-      // Add the marker to the map
-      const marker = new maplibregl.Marker(el)
-        .setLngLat([photo.location.longitude, photo.location.latitude])
-        .addTo(map.current!)
-      
-      console.log('Marker added:', marker)
+    // Add source for photo markers
+    map.current.addSource('photos', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: photoFeatures as any[]
+      }
     })
 
-    // Zoom to show the first marker
+    // Add layer for photo markers
+    map.current.addLayer({
+      id: 'photos',
+      type: 'circle',
+      source: 'photos',
+      paint: {
+        'circle-radius': 12,
+        'circle-color': ['get', 'color'],
+        'circle-stroke-width': 3,
+        'circle-stroke-color': '#ffffff',
+        'circle-opacity': 0.9
+      }
+    })
+
+    // Add click handler for photo markers using map events
+    map.current.on('click', 'photos', (e) => {
+      if (e.features && e.features.length > 0) {
+        const feature = e.features[0]
+        if (feature.properties && feature.properties.photo) {
+          try {
+            const photo = JSON.parse(feature.properties.photo)
+            console.log('Photo marker clicked:', photo.originalName)
+            onPhotoClick(photo)
+          } catch (err) {
+            console.error('Error parsing photo data:', err)
+          }
+        }
+      }
+    })
+
+    // Change cursor to pointer when hovering over markers
+    map.current.on('mouseenter', 'photos', () => {
+      if (map.current) {
+        map.current.getCanvas().style.cursor = 'pointer'
+      }
+    })
+
+    map.current.on('mouseleave', 'photos', () => {
+      if (map.current) {
+        map.current.getCanvas().style.cursor = ''
+      }
+    })
+
+    console.log(`Added ${photos.length} photo markers as GeoJSON features`)
+
+    // Zoom to show the first marker with globe-appropriate zoom
     if (photos.length > 0) {
       map.current.flyTo({
         center: [photos[0].location.longitude, photos[0].location.latitude],
-        zoom: 4,
+        zoom: 3,
         duration: 2000
       })
     }
@@ -257,7 +306,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       },
       paint: {
         'line-color': ['get', 'color'],
-        'line-width': 2,
+        'line-width': 3,
         'line-opacity': 0.8
       }
     })
@@ -278,7 +327,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       source: 'countries',
       paint: {
         'fill-color': '#22c55e',
-        'fill-opacity': 0.1
+        'fill-opacity': 0.15
       }
     })
 
@@ -288,8 +337,8 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       source: 'countries',
       paint: {
         'line-color': '#065f46',
-        'line-width': 0.5,
-        'line-opacity': 0.8
+        'line-width': 1,
+        'line-opacity': 0.6
       }
     })
   }
