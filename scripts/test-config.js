@@ -7,12 +7,21 @@
 console.log('Testing R2 upload configuration...');
 
 // Check environment
-const cfToken = process.env.CF_WORKERS;
-if (!cfToken) {
-  console.log('❌ CF_WORKERS environment variable not set');
-  console.log('ℹ️  For actual upload, set: export CF_WORKERS=your_token_here');
+const r2KeyId = process.env.R2_KEY_ID;
+const r2SecretKey = process.env.R2_SECRET_KEY;
+
+if (!r2KeyId) {
+  console.log('❌ R2_KEY_ID environment variable not set');
+  console.log('ℹ️  For actual upload, set: export R2_KEY_ID=your_key_id_here');
 } else {
-  console.log('✅ CF_WORKERS environment variable found');
+  console.log('✅ R2_KEY_ID environment variable found');
+}
+
+if (!r2SecretKey) {
+  console.log('❌ R2_SECRET_KEY environment variable not set');
+  console.log('ℹ️  For actual upload, set: export R2_SECRET_KEY=your_secret_key_here');
+} else {
+  console.log('✅ R2_SECRET_KEY environment variable found');
 }
 
 // Check if tile file exists

@@ -14,11 +14,19 @@ const R2_ENDPOINT = 'https://0269140aa6c636355368c840cf5a95b0.r2.cloudflarestora
 async function uploadTiles() {
   console.log('Starting upload to R2...');
   
-  // Get CF_WORKERS token from environment
-  const cfToken = process.env.CF_WORKERS;
-  if (!cfToken) {
-    console.error('CF_WORKERS environment variable not found');
-    console.log('Set it with: export CF_WORKERS=your_token_here');
+  // Get R2 credentials from environment
+  const r2KeyId = process.env.R2_KEY_ID;
+  const r2SecretKey = process.env.R2_SECRET_KEY;
+  
+  if (!r2KeyId) {
+    console.error('R2_KEY_ID environment variable not found');
+    console.log('Set it with: export R2_KEY_ID=your_key_id_here');
+    process.exit(1);
+  }
+  
+  if (!r2SecretKey) {
+    console.error('R2_SECRET_KEY environment variable not found');
+    console.log('Set it with: export R2_SECRET_KEY=your_secret_key_here');
     process.exit(1);
   }
   
@@ -27,8 +35,8 @@ async function uploadTiles() {
     region: 'auto',
     endpoint: R2_ENDPOINT,
     credentials: {
-      accessKeyId: 'CF_WORKERS_TOKEN',
-      secretAccessKey: cfToken,
+      accessKeyId: r2KeyId,
+      secretAccessKey: r2SecretKey,
     },
   });
   
@@ -72,9 +80,9 @@ async function uploadTiles() {
       console.log('Please create it in the Cloudflare dashboard first.');
     } else if (error.name === 'AccessDenied') {
       console.log('\nAccess denied. Please check:');
-      console.log('1. CF_WORKERS token has R2 permissions');
-      console.log('2. Token is valid and not expired');
-      console.log('3. Bucket exists and token has access to it');
+      console.log('1. R2_KEY_ID and R2_SECRET_KEY have R2 permissions');
+      console.log('2. Credentials are valid and not expired');
+      console.log('3. Bucket exists and credentials have access to it');
     }
     
     process.exit(1);

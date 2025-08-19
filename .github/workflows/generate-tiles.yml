@@ -65,7 +65,8 @@ jobs:
           cd scripts
           node upload-tiles.js
         env:
-          CF_WORKERS: ${{ secrets.CF_WORKERS }}
+          R2_KEY_ID: ${{ secrets.R2_KEY_ID }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
           
       - name: Upload artifact for inspection
         uses: actions/upload-artifact@v4
