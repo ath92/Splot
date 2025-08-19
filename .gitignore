@@ -22,6 +22,11 @@ worker/node_modules
 worker/dist
 worker/.wrangler
 
+# Tile generation artifacts
+scripts/world-tiles.pmtiles
+scripts/node_modules/
+scripts/package-lock.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

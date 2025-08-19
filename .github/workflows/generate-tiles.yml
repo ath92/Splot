@@ -1,0 +1,76 @@
+name: Generate and Upload Protomaps Tiles
+
+on:
+  workflow_dispatch:
+    inputs:
+      zoom_limit:
+        description: 'Maximum zoom level (lower = smaller file)'
+        required: false
+        default: '8'
+        type: string
+  schedule:
+    # Run monthly to update tiles
+    - cron: '0 0 1 * *'
+
+jobs:
+  generate-tiles:
+    runs-on: ubuntu-latest
+    name: Generate and Upload PMTiles
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: scripts/package.json
+          
+      - name: Install dependencies
+        run: |
+          cd scripts
+          npm install
+          
+      - name: Install pmtiles CLI
+        run: |
+          curl -L https://github.com/protomaps/go-pmtiles/releases/download/v1.28.0/go-pmtiles_1.28.0_Linux_x86_64.tar.gz -o pmtiles.tar.gz
+          tar -xzf pmtiles.tar.gz
+          sudo mv pmtiles /usr/local/bin/
+          pmtiles version
+          
+      - name: Generate tiles
+        run: |
+          cd scripts
+          ZOOM_LIMIT=${{ github.event.inputs.zoom_limit || '8' }} node generate-tiles.js
+          
+      - name: Check file size
+        run: |
+          cd scripts
+          if [ -f "world-tiles.pmtiles" ]; then
+            SIZE=$(stat -c%s "world-tiles.pmtiles")
+            SIZE_GB=$((SIZE / 1024 / 1024 / 1024))
+            echo "Generated file size: ${SIZE_GB}GB"
+            if [ $SIZE_GB -gt 3 ]; then
+              echo "::warning::File size (${SIZE_GB}GB) exceeds 3GB target"
+            fi
+          else
+            echo "::error::PMTiles file not generated"
+            exit 1
+          fi
+          
+      - name: Upload to R2
+        run: |
+          cd scripts
+          node upload-tiles.js
+        env:
+          CF_WORKERS: ${{ secrets.CF_WORKERS }}
+          
+      - name: Upload artifact for inspection
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: debug-logs
+          path: scripts/*.log
+          retention-days: 7

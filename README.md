@@ -10,13 +10,16 @@ A web app for displaying a set of pictures on an interactive map based on their 
 - **Geolocation-based rendering** - Pictures displayed on a map according to their geolocation metadata
 - **Worker API integration** - Fetches real photo data from Cloudflare Worker with GPS metadata
 - **Flight path visualization** - Interactive flight routes displayed as arcs on the map
+- **Custom vector tiles** - Uses protomaps pmtiles served from Cloudflare R2 for fast, offline-capable maps
 
 ## Tech Stack
 
 - **React** - Component-based UI framework
 - **MapLibre GL JS** - Open-source mapping library for interactive maps
+- **PMTiles** - Efficient vector tile format for fast map loading
 - **TypeScript** - Type-safe JavaScript
 - **Vite** - Fast build tool and dev server
+- **Cloudflare R2** - Object storage for tiles and photos
 
 ## Getting Started
 
@@ -62,6 +65,17 @@ The development server will start at `http://localhost:5173`. The app features:
 - **Two fingers**: Zoom (pinch) and rotate the map
 - **Touch-optimized**: All interactions work smoothly on mobile devices
 
+## Vector Tiles
+
+The app uses custom protomaps PMTiles served from Cloudflare R2 for fast, offline-capable mapping:
+
+- **Source**: OpenStreetMap data via protomaps.com
+- **Format**: PMTiles (~3GB, zoom levels 0-8)
+- **Storage**: Cloudflare R2 bucket
+- **Fallback**: Demo tiles if custom tiles unavailable
+
+To regenerate tiles, see `scripts/README.md` or use the GitHub Actions workflow.
+
 ## Project Structure
 
 ```
@@ -71,12 +85,18 @@ src/
 │   └── PhotoOverlay.tsx       # Photo detail modal overlay
 ├── services/
 │   ├── photoService.ts        # Photo data fetching and transformation
-│   └── flightsService.ts      # Flight data and route processing
+│   ├── flightsService.ts      # Flight data and route processing
+│   └── mapStyleService.ts     # Custom map style definitions
 ├── data/
 │   └── flights.json           # Flight routes and airport data
 ├── App.tsx                    # Main app component with map container
 ├── main.tsx                   # App entry point
 └── index.css                  # Single CSS file with all styles
+
+scripts/
+├── generate-tiles.js          # PMTiles generation from protomaps
+├── upload-tiles.js            # Upload tiles to Cloudflare R2
+└── README.md                  # Tile generation documentation
 ```
 
 ## License
