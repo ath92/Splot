@@ -6,9 +6,17 @@ compatibility_date = "2024-08-16"
 binding = "GLOBE"
 bucket_name = "globe"
 
+[[r2_buckets]]
+binding = "TILES"
+bucket_name = "tiles"
+
 [env.production]
 name = "splot-photo-worker"
 
 [[env.production.r2_buckets]]
 binding = "GLOBE"
 bucket_name = "globe"
+
+[[env.production.r2_buckets]]
+binding = "TILES"
+bucket_name = "tiles"

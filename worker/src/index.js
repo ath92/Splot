@@ -1,11 +1,13 @@
 /**
  * Photo Upload Cloudflare Worker
  * Handles photo uploads and geolocation metadata extraction for Splot
+ * Also serves PMTiles for map tiles
  */
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import exifr from 'exifr';
+import { handlePMTilesRequest } from './pmtiles.js';
 
 const app = new Hono();
 
@@ -21,6 +23,14 @@ app.get('/', (c) => serveUploadForm());
 app.post('/', async (c) => handlePhotoUpload(c));
 app.get('/photos', async (c) => handlePhotoList(c));
 app.get('/photo/:filename', async (c) => handlePhotoServe(c));
+
+// PMTiles routes
+app.get('/tiles/:name/:z/:x/:y.:ext', async (c) => {
+  return handlePMTilesRequest(c.req.raw, c.env, c.executionCtx);
+});
+app.get('/tiles/:name.json', async (c) => {
+  return handlePMTilesRequest(c.req.raw, c.env, c.executionCtx);
+});
 
 export default app;
 

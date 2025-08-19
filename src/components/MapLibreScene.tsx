@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Feature, FeatureCollection } from 'geojson'
-import { Protocol } from 'pmtiles'
 import { 
   fetchPhotos, 
   type Photo 
@@ -29,22 +28,18 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight)
 
     try {
-      // Register pmtiles protocol
-      const protocol = new Protocol();
-      maplibregl.addProtocol('pmtiles', protocol.tile);
-      console.log('PMTiles protocol registered');
-      
-      // Configuration for custom pmtiles
+      // Configuration for custom pmtiles - use worker endpoint instead of direct R2
+      const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://splot-photo-worker.tomhutman.workers.dev';
       const PMTILES_URL = import.meta.env.VITE_PMTILES_URL || 
-        'https://pub-a951d20402694897ae275d1758f4675c.r2.dev/world-tiles.pmtiles';
+        `${WORKER_URL}/tiles/world-tiles.json`;
       
-      console.log('Using pmtiles URL:', PMTILES_URL);
+      console.log('Using pmtiles TileJSON URL:', PMTILES_URL);
       
       // Try to use custom protomaps style first, fallback to demo tiles
       let mapStyle: string | object;
       try {
         mapStyle = createProtomapsStyle(PMTILES_URL);
-        console.log('Using custom protomaps style');
+        console.log('Using custom protomaps style with worker endpoint');
       } catch (styleError) {
         console.warn('Failed to create custom style, falling back to demo tiles:', styleError);
         mapStyle = 'https://demotiles.maplibre.org/style.json';
@@ -53,7 +48,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       // Initialize MapLibre map
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: mapStyle as any, // Type assertion for custom style
+        style: mapStyle as string | maplibregl.StyleSpecification,
         center: [0, 0],
         zoom: 1
       })
@@ -191,8 +186,6 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
     return () => {
       map.current?.remove();
-      // Clean up pmtiles protocol
-      maplibregl.removeProtocol('pmtiles');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // loadData is intentionally not in dependencies to avoid recreation

@@ -1,12 +1,12 @@
 // Custom MapLibre style for protomaps pmtiles
-export const createProtomapsStyle = (pmtilesUrl: string) => ({
+export const createProtomapsStyle = (tileJsonUrl: string) => ({
   "version": 8,
   "name": "Splot Protomaps",
   "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
   "sources": {
     "protomaps": {
       "type": "vector",
-      "url": `pmtiles://${pmtilesUrl}`,
+      "url": tileJsonUrl,
       "attribution": "© OpenStreetMap contributors, © Protomaps"
     }
   },
