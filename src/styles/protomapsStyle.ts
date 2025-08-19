@@ -3,6 +3,7 @@ import type { StyleSpecification } from 'maplibre-gl'
 // Protomaps PMTiles style configuration for MapLibre GL JS
 export const protomapsStyle = {
   version: 8,
+  glyphs: 'https://api.protomaps.com/fonts/{fontstack}/{range}.pbf',
   sources: {
     protomaps: {
       type: 'vector',
