@@ -24,6 +24,10 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
     console.log('Initializing MapLibre map, container:', mapContainer.current)
 
+    const loadDataCallback = async () => {
+      await loadData()
+    }
+
     try {
       // Initialize the map with minimal style
       map.current = new maplibregl.Map({
@@ -51,17 +55,18 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       map.current.addControl(new maplibregl.NavigationControl(), 'top-right')
 
       // Load data immediately (don't wait for load event)
-      loadData()
+      loadDataCallback()
 
     } catch (err) {
       console.error('Failed to initialize MapLibre:', err)
-      setError('Failed to initialize map')
+      setError(err instanceof Error ? err.message : 'Failed to initialize map')
     }
 
     return () => {
       map.current?.remove()
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // loadData is intentionally not in dependencies to avoid recreation
 
   const loadData = async () => {
     if (!map.current) return
@@ -74,7 +79,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       let photosResponse
       try {
         photosResponse = await fetchPhotos()
-      } catch (error) {
+      } catch {
         console.log('API not available, using fallback mock data for development')
         // Create minimal fallback data for development
         photosResponse = {
@@ -140,7 +145,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         // Filter out Antarctica (AQ) as in the original
         const filteredCountries = {
           ...countriesGeoJson,
-          features: countriesGeoJson.features.filter((d: any) => d.properties.ISO_A2 !== 'AQ')
+          features: countriesGeoJson.features.filter((d: {properties: {ISO_A2: string}}) => d.properties.ISO_A2 !== 'AQ')
         }
         
         addCountries(filteredCountries)
@@ -202,13 +207,13 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     }
   }
 
-  const addFlightPaths = (flightsData: any) => {
+  const addFlightPaths = (flightsData: {airports: Record<string, {latitude: number, longitude: number}>, flights: Array<{from: string, to: string, route: string, id: number}>}) => {
     if (!map.current) return
 
     const { airports, flights } = flightsData
     
     // Convert flights to GeoJSON LineString features
-    const flightFeatures = flights.map((flight: any, index: number) => {
+    const flightFeatures = flights.map((flight: {from: string, to: string, route: string, id: number}, index: number) => {
       const fromAirport = airports[flight.from]
       const toAirport = airports[flight.to]
       
@@ -220,7 +225,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         type: 'Feature',
         properties: {
           route: flight.route,
-          id: flight.id,
+          id: flight.id.toString(),
           color: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9f43', '#ee5a6f', '#00d2d3'][index % 8]
         },
         geometry: {
@@ -238,7 +243,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       type: 'geojson',
       data: {
         type: 'FeatureCollection',
-        features: flightFeatures
+        features: flightFeatures.filter(Boolean) as any[]
       }
     })
 
@@ -258,13 +263,13 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     })
   }
 
-  const addCountries = (countriesGeoJson: any) => {
+  const addCountries = (countriesGeoJson: {type: string, features: Array<{properties: {ISO_A2: string}}>}) => {
     if (!map.current) return
 
     // Add source and layer for countries
     map.current.addSource('countries', {
       type: 'geojson',
-      data: countriesGeoJson
+      data: countriesGeoJson as any
     })
 
     map.current.addLayer({
