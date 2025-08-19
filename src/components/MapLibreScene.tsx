@@ -29,10 +29,10 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight)
 
     try {
-      // Register pmtiles protocol
-      const protocol = new Protocol();
-      maplibregl.addProtocol('pmtiles', protocol.tile);
-      console.log('PMTiles protocol registered');
+      // TEMPORARILY DISABLE PMTiles protocol to test if it's interfering
+      // const protocol = new Protocol();
+      // maplibregl.addProtocol('pmtiles', protocol.tile);
+      console.log('PMTiles protocol registration skipped for testing');
       
       // Configuration for custom pmtiles
       const PMTILES_URL = import.meta.env.VITE_PMTILES_URL || 
@@ -50,21 +50,77 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         mapStyle = 'https://demotiles.maplibre.org/style.json';
       }
       
+      // TEMPORARY: Force use of demo tiles to test if PMTiles is the issue
+      console.log('TEMPORARY: Using minimal test style for debugging');
+      mapStyle = {
+        "version": 8,
+        "sources": {},
+        "layers": [{
+          "id": "background",
+          "type": "background",
+          "paint": {
+            "background-color": "#222"
+          }
+        }]
+      };
+      
       // Initialize MapLibre map
+      console.log('About to create MapLibre map with style:', typeof mapStyle, mapStyle);
       map.current = new maplibregl.Map({
         container: mapContainer.current,
         style: mapStyle as any, // Type assertion for custom style
         center: [0, 0],
-        zoom: 1
+        zoom: 1,
+        // Add some additional options that might help
+        antialias: true,
+        // Remove hash and other advanced options that might cause issues
       })
 
       console.log('MapLibre map initialized:', map.current)
+      
+      // Check if the map container is properly sized
+      console.log('Map container after init:', {
+        width: mapContainer.current.offsetWidth,
+        height: mapContainer.current.offsetHeight,
+        clientWidth: mapContainer.current.clientWidth,
+        clientHeight: mapContainer.current.clientHeight
+      });
+      
+      // Add more detailed event listeners for debugging
+      map.current.on('styledata', () => {
+        console.log('Style data loaded');
+      });
+      
+      map.current.on('sourcedataloading', (e) => {
+        console.log('Source data loading:', e);
+      });
+      
+      map.current.on('sourcedata', (e) => {
+        console.log('Source data loaded:', e);
+      });
+      
+      map.current.on('styleimagemissing', (e) => {
+        console.warn('Style image missing:', e);
+      });
+      
+      // Also listen for any other events that might indicate progress
+      map.current.on('dataloading', (e) => {
+        console.log('Data loading:', e);
+      });
+      
+      map.current.on('data', (e) => {
+        console.log('Data event:', e);
+      });
 
       // Force the map to render by triggering a resize
       setTimeout(() => {
         if (map.current) {
           map.current.resize()
           console.log('Map resized')
+          
+          // TEMPORARY: Force set loading to false to see if map works
+          console.log('TEMPORARY: Force clearing loading state to test map functionality');
+          setIsLoading(false);
         }
       }, 100)
 
