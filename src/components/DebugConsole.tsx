@@ -28,6 +28,66 @@ export default function DebugConsole({ isVisible }: DebugConsoleProps) {
       info: console.info
     }
 
+    // Helper function to remove circular references from objects
+    const removeCircularReferences = (obj: unknown, visited = new WeakSet()): unknown => {
+      // Handle null, undefined, and primitive types
+      if (obj === null || typeof obj !== 'object') {
+        return obj
+      }
+      
+      // Check if we've already visited this object (circular reference)
+      if (visited.has(obj)) {
+        return '[Circular Reference]'
+      }
+      
+      // Add current object to visited set
+      visited.add(obj)
+      
+      try {
+        // Handle arrays
+        if (Array.isArray(obj)) {
+          const result = obj.map(item => removeCircularReferences(item, visited))
+          visited.delete(obj) // Remove from visited set as we're done processing
+          return result
+        }
+        
+        // Handle Date objects
+        if (obj instanceof Date) {
+          visited.delete(obj)
+          return obj.toISOString()
+        }
+        
+        // Handle Error objects
+        if (obj instanceof Error) {
+          visited.delete(obj)
+          return {
+            name: obj.name,
+            message: obj.message,
+            stack: obj.stack
+          }
+        }
+        
+        // Handle regular objects
+        const result: Record<string, unknown> = {}
+        for (const key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            try {
+              result[key] = removeCircularReferences((obj as Record<string, unknown>)[key], visited)
+            } catch {
+              // If there's an error accessing a property, skip it
+              result[key] = '[Property Access Error]'
+            }
+          }
+        }
+        
+        visited.delete(obj) // Remove from visited set as we're done processing
+        return result
+      } catch {
+        visited.delete(obj)
+        return '[Object Processing Error]'
+      }
+    }
+
     // Helper to capture console messages
     const captureMessage = (type: ConsoleMessage['type']) => (...args: unknown[]) => {
       // Call original console method first
@@ -47,52 +107,58 @@ export default function DebugConsole({ isVisible }: DebugConsoleProps) {
             
             return jsonResult
           } catch {
-            // Improved fallback for circular references or other JSON errors
-            
-            // Handle specific object types more intelligently
-            if (arg instanceof Date) {
-              return arg.toISOString()
-            }
-            
-            if (arg instanceof Error) {
-              return `Error: ${arg.message}`
-            }
-            
-            if (Array.isArray(arg)) {
-              try {
-                // Try to stringify array elements individually
-                const elements = arg.slice(0, 10).map(item => {
-                  try {
-                    return JSON.stringify(item)
-                  } catch {
-                    return String(item)
-                  }
-                })
-                const preview = elements.join(', ')
-                return `[${preview}${arg.length > 10 ? `, ...${arg.length - 10} more` : ''}]`
-              } catch {
-                return `[Array(${arg.length})]`
-              }
-            }
-            
-            // For other objects, try to get constructor name and some properties
-            const constructorName = arg.constructor?.name || 'Object'
-            
-            // Try to get some property names without triggering getters
+            // If JSON.stringify fails due to circular references, try removing them first
             try {
-              const keys = Object.keys(arg)
-              if (keys.length === 0) {
-                return `{} (${constructorName})`
+              const cleanedObj = removeCircularReferences(arg)
+              return JSON.stringify(cleanedObj, null, 2)
+            } catch {
+              // Final fallback for objects that still can't be processed
+              
+              // Handle specific object types more intelligently
+              if (arg instanceof Date) {
+                return arg.toISOString()
               }
               
-              // For objects with circular references or that can't be stringified,
-              // show a preview of property names
-              const keyPreview = keys.slice(0, 5).join(', ')
-              const moreKeys = keys.length > 5 ? `, ...${keys.length - 5} more` : ''
-              return `{${keyPreview}${moreKeys}} (${constructorName})`
-            } catch {
-              // If even getting keys fails
-              return `[${constructorName} Object]`
+              if (arg instanceof Error) {
+                return `Error: ${arg.message}`
+              }
+              
+              if (Array.isArray(arg)) {
+                try {
+                  // Try to stringify array elements individually
+                  const elements = arg.slice(0, 10).map(item => {
+                    try {
+                      return JSON.stringify(item)
+                    } catch {
+                      return String(item)
+                    }
+                  })
+                  const preview = elements.join(', ')
+                  return `[${preview}${arg.length > 10 ? `, ...${arg.length - 10} more` : ''}]`
+                } catch {
+                  return `[Array(${arg.length})]`
+                }
+              }
+              
+              // For other objects, try to get constructor name and some properties
+              const constructorName = arg.constructor?.name || 'Object'
+              
+              // Try to get some property names without triggering getters
+              try {
+                const keys = Object.keys(arg)
+                if (keys.length === 0) {
+                  return `{} (${constructorName})`
+                }
+                
+                // For objects with circular references or that can't be stringified,
+                // show a preview of property names
+                const keyPreview = keys.slice(0, 5).join(', ')
+                const moreKeys = keys.length > 5 ? `, ...${keys.length - 5} more` : ''
+                return `{${keyPreview}${moreKeys}} (${constructorName})`
+              } catch {
+                // If even getting keys fails
+                return `[${constructorName} Object]`
+              }
             }
           }
         }
