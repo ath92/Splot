@@ -29,10 +29,10 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight)
 
     try {
-      // TEMPORARILY DISABLE PMTiles protocol to test if it's interfering
-      // const protocol = new Protocol();
-      // maplibregl.addProtocol('pmtiles', protocol.tile);
-      console.log('PMTiles protocol registration skipped for testing');
+      // Register pmtiles protocol
+      const protocol = new Protocol();
+      maplibregl.addProtocol('pmtiles', protocol.tile);
+      console.log('PMTiles protocol registered');
       
       // Configuration for custom pmtiles
       const PMTILES_URL = import.meta.env.VITE_PMTILES_URL || 
@@ -50,95 +50,40 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         mapStyle = 'https://demotiles.maplibre.org/style.json';
       }
       
-      // TEMPORARY: Force use of demo tiles to test if PMTiles is the issue
-      console.log('TEMPORARY: Using minimal test style for debugging');
-      mapStyle = {
-        "version": 8,
-        "sources": {},
-        "layers": [{
-          "id": "background",
-          "type": "background",
-          "paint": {
-            "background-color": "#222"
-          }
-        }]
-      };
-      
       // Initialize MapLibre map
-      console.log('About to create MapLibre map with style:', typeof mapStyle, mapStyle);
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: mapStyle as any, // Type assertion for custom style
+        style: mapStyle as maplibregl.StyleSpecification,
         center: [0, 0],
-        zoom: 1,
-        // Add some additional options that might help
-        antialias: true,
-        // Remove hash and other advanced options that might cause issues
+        zoom: 1
       })
 
       console.log('MapLibre map initialized:', map.current)
-      
-      // Check if the map container is properly sized
-      console.log('Map container after init:', {
-        width: mapContainer.current.offsetWidth,
-        height: mapContainer.current.offsetHeight,
-        clientWidth: mapContainer.current.clientWidth,
-        clientHeight: mapContainer.current.clientHeight
-      });
-      
-      // Add more detailed event listeners for debugging
-      map.current.on('styledata', () => {
-        console.log('Style data loaded');
-      });
-      
-      map.current.on('sourcedataloading', (e) => {
-        console.log('Source data loading:', e);
-      });
-      
-      map.current.on('sourcedata', (e) => {
-        console.log('Source data loaded:', e);
-      });
-      
-      map.current.on('styleimagemissing', (e) => {
-        console.warn('Style image missing:', e);
-      });
-      
-      // Also listen for any other events that might indicate progress
-      map.current.on('dataloading', (e) => {
-        console.log('Data loading:', e);
-      });
-      
-      map.current.on('data', (e) => {
-        console.log('Data event:', e);
-      });
 
-      // Force the map to render by triggering a resize
-      setTimeout(() => {
-        if (map.current) {
-          map.current.resize()
-          console.log('Map resized')
-          
-          // TEMPORARY: Force set loading to false to see if map works
-          console.log('TEMPORARY: Force clearing loading state to test map functionality');
-          setIsLoading(false);
-        }
-      }, 100)
-
-      // Add a basic layer after the map loads
-      map.current.on('load', async () => {
-        console.log('Map load event fired')
-        setIsLoading(false)
+      // Track if map has been marked as ready to avoid duplicate initialization
+      let mapInitialized = false;
+      
+      const initializeMapData = async () => {
+        if (mapInitialized || !map.current) return;
+        mapInitialized = true;
         
-        // Set globe projection
-        if (map.current) {
+        console.log('Map is ready, initializing data');
+        setIsLoading(false);
+        
+        // Set globe projection if supported
+        try {
           map.current.setProjection({
             type: 'globe'
-          })
-          console.log('Globe projection set')
-          
-          // Load data after map is ready
-          try {
-            // Load photos
+          });
+          console.log('Globe projection set');
+        } catch (projectionError) {
+          console.warn('Globe projection not supported or failed:', projectionError);
+          // Continue without globe projection
+        }
+        
+        // Load data after map is ready
+        try {
+          // Load photos
             let photosResponse
             try {
               photosResponse = await fetchPhotos()
@@ -218,26 +163,54 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               console.error('Failed to load countries:', err)
               setError(err instanceof Error ? err.message : 'Failed to load countries')
             }
-          } catch (err) {
-            console.error('Error loading data:', err)
-            setError(err instanceof Error ? err.message : 'Failed to load data')
-          }
+        } catch (err) {
+          console.error('Error loading data:', err)
+          setError(err instanceof Error ? err.message : 'Failed to load data')
         }
-      })
+      };
+
+      // Multiple approaches to detect when map is ready
+      // Approach 1: Traditional load event
+      map.current.on('load', () => {
+        console.log('Map load event fired');
+        initializeMapData();
+      });
+      
+      // Approach 2: Style data event (more reliable)
+      map.current.on('styledata', () => {
+        console.log('Style data loaded');
+        if (map.current?.isStyleLoaded()) {
+          setTimeout(initializeMapData, 100);
+        }
+      });
+      
+      // Approach 3: Idle event (when map finishes loading/rendering)
+      map.current.on('idle', () => {
+        console.log('Map idle event fired');
+        initializeMapData();
+      });
+      
+      // Force the map to render by triggering a resize
+      setTimeout(() => {
+        if (map.current) {
+          map.current.resize()
+          console.log('Map resized')
+        }
+      }, 100);
+      
+      // Fallback: Force initialization after a reasonable timeout
+      setTimeout(() => {
+        if (!mapInitialized) {
+          console.log('Fallback timeout: forcing map initialization');
+          initializeMapData();
+        }
+      }, 3000);
 
       map.current.on('error', (e: maplibregl.ErrorEvent) => {
         console.error('Map error:', e)
         setError(`Map error: ${e.error?.message || 'Unknown error'}`)
         setIsLoading(false)
       })
-
-      // Force set loading to false after a timeout if nothing happens
-      setTimeout(() => {
-        if (isLoading) {
-          console.log('Timeout reached, forcing loading to false')
-          setIsLoading(false)
-        }
-      }, 5000)
 
     } catch (err) {
       console.error('Failed to initialize MapLibre:', err)
