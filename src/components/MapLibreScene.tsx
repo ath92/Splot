@@ -43,11 +43,13 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       // Try to use custom protomaps style first, fallback to demo tiles
       let mapStyle: string | object;
       try {
+        // Force throw an error to test fallback
+        throw new Error('Simulated PMTiles style creation error');
         mapStyle = createProtomapsStyle(PMTILES_URL);
         console.log('Using custom protomaps style');
       } catch (styleError) {
         console.warn('Failed to create custom style, falling back to demo tiles:', styleError);
-        mapStyle = 'https://demotiles.maplibre.org/style.json';
+        mapStyle = 'https://invalid-demo-tiles-url.example.com/style.json';
       }
       
       // Initialize MapLibre map
