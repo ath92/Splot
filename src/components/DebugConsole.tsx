@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
+import JsonView from '@uiw/react-json-view'
 
 interface ConsoleMessage {
   id: number
   type: 'log' | 'warn' | 'error' | 'info'
-  message: string
+  args: unknown[]
   timestamp: Date
 }
 
@@ -125,83 +126,68 @@ export default function DebugConsole({ isVisible }: DebugConsoleProps) {
       // Call original console method first
       originalConsole[type](...args)
       
-      // Capture for our debug panel
-      const message = args.map(arg => {
+      // Capture for our debug panel - store cleaned args instead of stringified message
+      const cleanedArgs = args.map(arg => {
         if (typeof arg === 'object' && arg !== null) {
           try {
-            // Try to stringify, but handle circular references
-            const jsonResult = JSON.stringify(arg, null, 2)
+            // Try to clean circular references first
+            return removeCircularReferences(arg)
+          } catch {
+            // Final fallback for objects that can't be processed
+            if (arg instanceof Date) {
+              return arg.toISOString()
+            }
             
-            // Special case: Error objects stringify to "{}" but aren't actually empty
-            if (jsonResult === '{}' && arg instanceof Error) {
+            if (arg instanceof Error) {
               return `Error: ${arg.message}`
             }
             
-            return jsonResult
-          } catch {
-            // If JSON.stringify fails due to circular references, try removing them first
-            try {
-              const cleanedObj = removeCircularReferences(arg)
-              return JSON.stringify(cleanedObj, null, 2)
-            } catch {
-              // Final fallback for objects that still can't be processed
-              
-              // Handle specific object types more intelligently
-              if (arg instanceof Date) {
-                return arg.toISOString()
-              }
-              
-              if (arg instanceof Error) {
-                return `Error: ${arg.message}`
-              }
-              
-              if (Array.isArray(arg)) {
-                try {
-                  // Try to stringify array elements individually
-                  const elements = arg.slice(0, 10).map(item => {
-                    try {
-                      return JSON.stringify(item)
-                    } catch {
-                      return String(item)
-                    }
-                  })
-                  const preview = elements.join(', ')
-                  return `[${preview}${arg.length > 10 ? `, ...${arg.length - 10} more` : ''}]`
-                } catch {
-                  return `[Array(${arg.length})]`
-                }
-              }
-              
-              // For other objects, try to get constructor name and some properties
-              const constructorName = arg.constructor?.name || 'Object'
-              
-              // Try to get some property names without triggering getters
+            if (Array.isArray(arg)) {
               try {
-                const keys = Object.keys(arg)
-                if (keys.length === 0) {
-                  return `{} (${constructorName})`
-                }
-                
-                // For objects with circular references or that can't be stringified,
-                // show a preview of property names
-                const keyPreview = keys.slice(0, 5).join(', ')
-                const moreKeys = keys.length > 5 ? `, ...${keys.length - 5} more` : ''
-                return `{${keyPreview}${moreKeys}} (${constructorName})`
+                // Try to stringify array elements individually
+                const elements = arg.slice(0, 10).map(item => {
+                  try {
+                    return JSON.stringify(item)
+                  } catch {
+                    return String(item)
+                  }
+                })
+                const preview = elements.join(', ')
+                return `[${preview}${arg.length > 10 ? `, ...${arg.length - 10} more` : ''}]`
               } catch {
-                // If even getting keys fails
-                return `[${constructorName} Object]`
+                return `[Array(${arg.length})]`
               }
+            }
+            
+            // For other objects, try to get constructor name and some properties
+            const constructorName = arg.constructor?.name || 'Object'
+            
+            // Try to get some property names without triggering getters
+            try {
+              const keys = Object.keys(arg)
+              if (keys.length === 0) {
+                return `{} (${constructorName})`
+              }
+              
+              // For objects with circular references or that can't be stringified,
+              // show a preview of property names
+              const keyPreview = keys.slice(0, 5).join(', ')
+              const moreKeys = keys.length > 5 ? `, ...${keys.length - 5} more` : ''
+              return `{${keyPreview}${moreKeys}} (${constructorName})`
+            } catch {
+              // If even getting keys fails
+              return `[${constructorName} Object]`
             }
           }
         }
-        return String(arg)
-      }).join(' ')
+        return arg
+      })
       
-      setMessages(prev => {
+      setMessages((prev: ConsoleMessage[]) => {
         const newMessage: ConsoleMessage = {
           id: messageIdRef.current++,
           type,
-          message,
+          args: cleanedArgs,
           timestamp: new Date()
         }
         // Keep only last 100 messages to prevent memory issues
@@ -296,9 +282,27 @@ export default function DebugConsole({ isVisible }: DebugConsoleProps) {
                 <span className="debug-console-type">
                   {msg.type.toUpperCase()}
                 </span>
-                <span className="debug-console-text">
-                  {msg.message}
-                </span>
+                <div className="debug-console-content-wrapper">
+                  {msg.args.map((arg, index) => (
+                    <div key={index} className="debug-console-arg">
+                      {typeof arg === 'object' && arg !== null && typeof arg !== 'string' ? (
+                        <JsonView 
+                          value={arg} 
+                          collapsed={1}
+                          style={{
+                            backgroundColor: 'transparent',
+                            fontSize: '11px',
+                            lineHeight: '1.4'
+                          }}
+                        />
+                      ) : (
+                        <span className="debug-console-primitive">
+                          {String(arg)}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
             <div ref={messagesEndRef} />
