@@ -1,6 +1,6 @@
 # Splot Photo Upload Worker
 
-A Cloudflare Worker that handles photo uploads with geolocation metadata extraction for the Splot project.
+A Cloudflare Worker that handles photo uploads with geolocation metadata extraction and PMTiles serving for the Splot project.
 
 ## What it does
 
@@ -8,6 +8,7 @@ A Cloudflare Worker that handles photo uploads with geolocation metadata extract
 - **Photo Processing**: Accepts JPEG image uploads via POST requests
 - **EXIF Data Extraction**: Automatically extracts GPS coordinates and other metadata from photos
 - **R2 Storage**: Stores photos in Cloudflare R2 bucket with comprehensive metadata
+- **PMTiles Serving**: Serves vector map tiles from PMTiles archives stored in R2
 - **CORS Support**: Includes CORS headers for web compatibility
 
 ## Features
@@ -28,11 +29,19 @@ A Cloudflare Worker that handles photo uploads with geolocation metadata extract
   - File metadata (size, type, original name)
 - Returns JSON response with upload status and location info
 
+### PMTiles Processing (GET requests to /tiles/*)
+- Serves vector map tiles from PMTiles archives stored in R2 bucket "tiles"
+- Provides TileJSON metadata endpoints for map client configuration
+- Supports individual tile serving with proper MIME types and caching
+- Built-in CORS support for web map integration
+- Based on the official protomaps/PMTiles serverless implementation
+
 ## Files
 
 - `src/index.js` - The main worker code (photo upload and form serving)
-- `wrangler.toml` - Cloudflare Worker configuration with R2 bucket binding
-- `package.json` - Worker dependencies including exifr for EXIF extraction
+- `src/pmtiles.js` - PMTiles serving functionality for vector map tiles
+- `wrangler.toml` - Cloudflare Worker configuration with R2 bucket bindings
+- `package.json` - Worker dependencies including exifr for EXIF extraction and pmtiles for tile serving
 
 ## Setup
 
@@ -49,7 +58,8 @@ To deploy this worker, you need to configure GitHub Secrets and R2 bucket:
 
 3. **R2 Bucket Setup**
    - Create an R2 bucket named "globe" in your Cloudflare account
-   - The bucket is automatically bound to the worker as `GLOBE`
+   - Create an R2 bucket named "tiles" in your Cloudflare account
+   - The buckets are automatically bound to the worker as `GLOBE` and `TILES`
 
 ## API Endpoints
 
@@ -116,6 +126,40 @@ Returns the actual photo file for the given filename.
 **Response:**
 - Content-Type: image/jpeg
 - Cache-Control: public, max-age=31536000
+
+### `GET /tiles/{name}.json` - PMTiles TileJSON Metadata
+Returns TileJSON metadata for the specified PMTiles archive.
+
+**Example:** `/tiles/world-tiles.json`
+
+**Response:**
+```json
+{
+  "tilejson": "3.0.0",
+  "name": "world-tiles",
+  "description": "",
+  "version": "1.0.0",
+  "attribution": "© OpenStreetMap contributors",
+  "scheme": "xyz",
+  "tiles": [
+    "https://your-worker.domain.workers.dev/tiles/world-tiles/{z}/{x}/{y}.mvt"
+  ],
+  "minzoom": 0,
+  "maxzoom": 8,
+  "bounds": [-180, -85.051128, 180, 85.051128],
+  "center": [0, 0, 2]
+}
+```
+
+### `GET /tiles/{name}/{z}/{x}/{y}.{ext}` - PMTiles Individual Tiles
+Returns individual vector tiles from the PMTiles archive.
+
+**Example:** `/tiles/world-tiles/2/1/1.mvt`
+
+**Response:**
+- Content-Type: application/x-protobuf (for .mvt tiles)
+- Cache-Control: public, max-age=86400
+- CORS headers included
 
 ## Deployment
 
