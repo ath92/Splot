@@ -22,65 +22,41 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
   useEffect(() => {
     if (!mapContainer.current || map.current) return
 
-    // Initialize the map
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: {
-        version: 8,
-        sources: {
-          'simple-base': {
-            type: 'raster',
-            tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: '© OpenStreetMap contributors'
-          }
+    console.log('Initializing MapLibre map, container:', mapContainer.current)
+
+    try {
+      // Initialize the map with minimal style
+      map.current = new maplibregl.Map({
+        container: mapContainer.current,
+        style: {
+          version: 8,
+          sources: {},
+          layers: [
+            {
+              id: 'background',
+              type: 'background',
+              paint: {
+                'background-color': '#1a202c'
+              }
+            }
+          ]
         },
-        layers: [
-          {
-            id: 'background',
-            type: 'background',
-            paint: {
-              'background-color': '#2c3e50'
-            }
-          },
-          {
-            id: 'base-tiles',
-            type: 'raster',
-            source: 'simple-base',
-            paint: {
-              'raster-opacity': 0.7
-            }
-          }
-        ]
-      },
-      center: [0, 20],
-      zoom: 2
-    })
+        center: [0, 30],
+        zoom: 2
+      })
 
-    console.log('MapLibre map initialized')
+      console.log('MapLibre map initialized:', map.current)
 
-    // Add navigation controls
-    map.current.addControl(new maplibregl.NavigationControl(), 'top-right')
+      // Add navigation controls
+      map.current.addControl(new maplibregl.NavigationControl(), 'top-right')
 
-    // Wait for map to load before adding data
-    map.current.on('load', () => {
-      console.log('MapLibre map loaded')
+      // Load data immediately (don't wait for load event)
       loadData()
-    })
 
-    // Handle map errors
-    map.current.on('error', (e) => {
-      console.error('MapLibre error:', e)
-      setError('Map failed to load')
-    })
-
-    // Force load data if map doesn't fire load event within 3 seconds
-    setTimeout(() => {
-      if (map.current && !error) {
-        console.log('Forcing data load after timeout')
-        loadData()
-      }
-    }, 3000)
+    } catch (err) {
+      console.error('Failed to initialize MapLibre:', err)
+      setError('Failed to initialize map')
+    }
 
     return () => {
       map.current?.remove()
