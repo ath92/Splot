@@ -300,6 +300,24 @@ html, body {
   color: #fff;
 }
 
+.debug-console-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.debug-console-arg {
+  display: flex;
+  align-items: flex-start;
+}
+
+.debug-console-primitive {
+  color: #fff;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .debug-console-message-log .debug-console-type {
   color: #00ff00;
 }
