@@ -30,11 +30,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       // Try the most minimal possible MapLibre setup
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: {
-          version: 8,
-          sources: {},
-          layers: []
-        },
+        style: 'https://demotiles.maplibre.org/style.json',
         center: [0, 0],
         zoom: 1
       })
@@ -54,17 +50,8 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         console.log('Map load event fired')
         setIsLoading(false)
         
-        // Add a simple background
+        // Set globe projection
         if (map.current) {
-          map.current.addSource('simple-bg', {
-            type: 'geojson',
-            data: {
-              type: 'FeatureCollection',
-              features: []
-            }
-          })
-          
-          // Set globe projection
           map.current.setProjection({
             type: 'globe'
           })
