@@ -53,36 +53,37 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       // Initialize MapLibre map
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: mapStyle as any, // Type assertion for custom style
+        style: mapStyle as maplibregl.StyleSpecification,
         center: [0, 0],
         zoom: 1
       })
 
       console.log('MapLibre map initialized:', map.current)
 
-      // Force the map to render by triggering a resize
-      setTimeout(() => {
-        if (map.current) {
-          map.current.resize()
-          console.log('Map resized')
-        }
-      }, 100)
-
-      // Add a basic layer after the map loads
-      map.current.on('load', async () => {
-        console.log('Map load event fired')
-        setIsLoading(false)
+      // Track if map has been marked as ready to avoid duplicate initialization
+      let mapInitialized = false;
+      
+      const initializeMapData = async () => {
+        if (mapInitialized || !map.current) return;
+        mapInitialized = true;
         
-        // Set globe projection
-        if (map.current) {
+        console.log('Map is ready, initializing data');
+        setIsLoading(false);
+        
+        // Set globe projection if supported
+        try {
           map.current.setProjection({
             type: 'globe'
-          })
-          console.log('Globe projection set')
-          
-          // Load data after map is ready
-          try {
-            // Load photos
+          });
+          console.log('Globe projection set');
+        } catch (projectionError) {
+          console.warn('Globe projection not supported or failed:', projectionError);
+          // Continue without globe projection
+        }
+        
+        // Load data after map is ready
+        try {
+          // Load photos
             let photosResponse
             try {
               photosResponse = await fetchPhotos()
@@ -162,26 +163,54 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               console.error('Failed to load countries:', err)
               setError(err instanceof Error ? err.message : 'Failed to load countries')
             }
-          } catch (err) {
-            console.error('Error loading data:', err)
-            setError(err instanceof Error ? err.message : 'Failed to load data')
-          }
+        } catch (err) {
+          console.error('Error loading data:', err)
+          setError(err instanceof Error ? err.message : 'Failed to load data')
         }
-      })
+      };
+
+      // Multiple approaches to detect when map is ready
+      // Approach 1: Traditional load event
+      map.current.on('load', () => {
+        console.log('Map load event fired');
+        initializeMapData();
+      });
+      
+      // Approach 2: Style data event (more reliable)
+      map.current.on('styledata', () => {
+        console.log('Style data loaded');
+        if (map.current?.isStyleLoaded()) {
+          setTimeout(initializeMapData, 100);
+        }
+      });
+      
+      // Approach 3: Idle event (when map finishes loading/rendering)
+      map.current.on('idle', () => {
+        console.log('Map idle event fired');
+        initializeMapData();
+      });
+      
+      // Force the map to render by triggering a resize
+      setTimeout(() => {
+        if (map.current) {
+          map.current.resize()
+          console.log('Map resized')
+        }
+      }, 100);
+      
+      // Fallback: Force initialization after a reasonable timeout
+      setTimeout(() => {
+        if (!mapInitialized) {
+          console.log('Fallback timeout: forcing map initialization');
+          initializeMapData();
+        }
+      }, 3000);
 
       map.current.on('error', (e: maplibregl.ErrorEvent) => {
         console.error('Map error:', e)
         setError(`Map error: ${e.error?.message || 'Unknown error'}`)
         setIsLoading(false)
       })
-
-      // Force set loading to false after a timeout if nothing happens
-      setTimeout(() => {
-        if (isLoading) {
-          console.log('Timeout reached, forcing loading to false')
-          setIsLoading(false)
-        }
-      }, 5000)
 
     } catch (err) {
       console.error('Failed to initialize MapLibre:', err)
