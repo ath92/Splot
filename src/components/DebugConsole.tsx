@@ -38,13 +38,62 @@ export default function DebugConsole({ isVisible }: DebugConsoleProps) {
         if (typeof arg === 'object' && arg !== null) {
           try {
             // Try to stringify, but handle circular references
-            return JSON.stringify(arg, null, 2)
-          } catch {
-            // Fallback for circular references or other JSON errors
-            if (arg.toString && typeof arg.toString === 'function') {
-              return arg.toString()
+            const jsonResult = JSON.stringify(arg, null, 2)
+            
+            // Special case: Error objects stringify to "{}" but aren't actually empty
+            if (jsonResult === '{}' && arg instanceof Error) {
+              return `Error: ${arg.message}`
             }
-            return '[Complex Object]'
+            
+            return jsonResult
+          } catch {
+            // Improved fallback for circular references or other JSON errors
+            
+            // Handle specific object types more intelligently
+            if (arg instanceof Date) {
+              return arg.toISOString()
+            }
+            
+            if (arg instanceof Error) {
+              return `Error: ${arg.message}`
+            }
+            
+            if (Array.isArray(arg)) {
+              try {
+                // Try to stringify array elements individually
+                const elements = arg.slice(0, 10).map(item => {
+                  try {
+                    return JSON.stringify(item)
+                  } catch {
+                    return String(item)
+                  }
+                })
+                const preview = elements.join(', ')
+                return `[${preview}${arg.length > 10 ? `, ...${arg.length - 10} more` : ''}]`
+              } catch {
+                return `[Array(${arg.length})]`
+              }
+            }
+            
+            // For other objects, try to get constructor name and some properties
+            const constructorName = arg.constructor?.name || 'Object'
+            
+            // Try to get some property names without triggering getters
+            try {
+              const keys = Object.keys(arg)
+              if (keys.length === 0) {
+                return `{} (${constructorName})`
+              }
+              
+              // For objects with circular references or that can't be stringified,
+              // show a preview of property names
+              const keyPreview = keys.slice(0, 5).join(', ')
+              const moreKeys = keys.length > 5 ? `, ...${keys.length - 5} more` : ''
+              return `{${keyPreview}${moreKeys}} (${constructorName})`
+            } catch {
+              // If even getting keys fails
+              return `[${constructorName} Object]`
+            }
           }
         }
         return String(arg)
