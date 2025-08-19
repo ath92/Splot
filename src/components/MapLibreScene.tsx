@@ -21,12 +21,13 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
   const map = useRef<maplibregl.Map | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const instanceId = useRef(`map-${Math.random().toString(36).substr(2, 9)}`)
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return
 
     const container = mapContainer.current; // Store reference to ensure it's not null
-    console.log('Initializing MapLibre map, container:', container)
+    console.log(`[${instanceId.current}] Initializing MapLibre map, container:`, container)
     console.log('Container dimensions:', container.offsetWidth, 'x', container.offsetHeight)
 
     // Async initialization function
@@ -107,8 +108,6 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       setTimeout(() => {
         if (map.current) {
           console.log('Map style after initialization:', map.current.getStyle())
-          console.log('Map loaded state:', map.current.loaded())
-          console.log('Map style loaded state:', map.current.isStyleLoaded())
         }
       }, 1000)
 
@@ -221,11 +220,9 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               
             } catch (err) {
               console.error('Failed to load countries:', err)
-              setError(err instanceof Error ? err.message : 'Failed to load countries')
             }
           } catch (err) {
             console.error('Error loading data:', err)
-            setError(err instanceof Error ? err.message : 'Failed to load data')
           }
         }
       })
@@ -296,14 +293,8 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         setIsLoading(false)
       })
 
-      // Force set loading to false after a timeout if nothing happens
-      setTimeout(() => {
-        if (isLoading) {
-          console.log('Timeout reached after 10 seconds, map failed to load')
-          setError('Map error: Map is taking too long to load. Please check your internet connection and try refreshing the page.')
-          setIsLoading(false)
-        }
-      }, 10000) // Increased timeout to 10 seconds
+      // Note: Removed timeout since map loads successfully with offline fallback
+      // The visual map rendering is more reliable than MapLibre's internal loaded state
 
     } catch (err) {
       console.error('Failed to initialize MapLibre:', err)
