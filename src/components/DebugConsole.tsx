@@ -29,7 +29,24 @@ export default function DebugConsole({ isVisible }: DebugConsoleProps) {
     }
 
     // Helper function to remove circular references from objects
-    const removeCircularReferences = (obj: unknown, visited = new WeakSet()): unknown => {
+    const removeCircularReferences = (
+      obj: unknown, 
+      visited = new WeakSet(), 
+      depth = 0, 
+      startTime = Date.now()
+    ): unknown => {
+      // Prevent infinite recursion by limiting depth
+      const MAX_DEPTH = 20
+      if (depth > MAX_DEPTH) {
+        return '[Max Depth Reached]'
+      }
+      
+      // Prevent hanging by limiting processing time (max 100ms per object graph)
+      const MAX_PROCESSING_TIME = 100
+      if (Date.now() - startTime > MAX_PROCESSING_TIME) {
+        return '[Processing Timeout]'
+      }
+      
       // Handle null, undefined, and primitive types
       if (obj === null || typeof obj !== 'object') {
         return obj
@@ -46,20 +63,24 @@ export default function DebugConsole({ isVisible }: DebugConsoleProps) {
       try {
         // Handle arrays
         if (Array.isArray(obj)) {
-          const result = obj.map(item => removeCircularReferences(item, visited))
-          visited.delete(obj) // Remove from visited set as we're done processing
+          // Limit array processing to prevent performance issues
+          const maxItems = 50
+          const result = obj.slice(0, maxItems).map(item => 
+            removeCircularReferences(item, visited, depth + 1, startTime)
+          )
+          if (obj.length > maxItems) {
+            result.push(`[... ${obj.length - maxItems} more items]`)
+          }
           return result
         }
         
         // Handle Date objects
         if (obj instanceof Date) {
-          visited.delete(obj)
           return obj.toISOString()
         }
         
         // Handle Error objects
         if (obj instanceof Error) {
-          visited.delete(obj)
           return {
             name: obj.name,
             message: obj.message,
@@ -69,21 +90,32 @@ export default function DebugConsole({ isVisible }: DebugConsoleProps) {
         
         // Handle regular objects
         const result: Record<string, unknown> = {}
-        for (const key in obj) {
-          if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            try {
-              result[key] = removeCircularReferences((obj as Record<string, unknown>)[key], visited)
-            } catch {
-              // If there's an error accessing a property, skip it
-              result[key] = '[Property Access Error]'
-            }
+        const keys = Object.keys(obj)
+        const maxProperties = 30 // Limit properties to prevent performance issues
+        
+        // Process up to maxProperties
+        const keysToProcess = keys.slice(0, maxProperties)
+        for (const key of keysToProcess) {
+          try {
+            result[key] = removeCircularReferences(
+              (obj as Record<string, unknown>)[key], 
+              visited, 
+              depth + 1, 
+              startTime
+            )
+          } catch {
+            // If there's an error accessing a property, skip it
+            result[key] = '[Property Access Error]'
           }
         }
         
-        visited.delete(obj) // Remove from visited set as we're done processing
+        // Add indicator if there are more properties
+        if (keys.length > maxProperties) {
+          result['[...]'] = `${keys.length - maxProperties} more properties`
+        }
+        
         return result
       } catch {
-        visited.delete(obj)
         return '[Object Processing Error]'
       }
     }
