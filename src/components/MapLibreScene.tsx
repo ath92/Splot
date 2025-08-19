@@ -23,53 +23,72 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     if (!mapContainer.current || map.current) return
 
     console.log('Initializing MapLibre map, container:', mapContainer.current)
+    console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight)
 
     try {
-      // Initialize the map with absolute minimal configuration to debug
+      // Try the most minimal possible MapLibre setup
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: 'https://demotiles.maplibre.org/style.json', // Use a working style
-        center: [0, 20],
-        zoom: 2
+        style: {
+          version: 8,
+          sources: {},
+          layers: []
+        },
+        center: [0, 0],
+        zoom: 1
       })
 
       console.log('MapLibre map initialized:', map.current)
 
-      // Add navigation controls
-      map.current.addControl(new maplibregl.NavigationControl(), 'top-right')
+      // Force the map to render by triggering a resize
+      setTimeout(() => {
+        if (map.current) {
+          map.current.resize()
+          console.log('Map resized')
+        }
+      }, 100)
 
-      // Wait for map to be loaded before adding data
-      map.current.on('load', async () => {
-        console.log('Map fully loaded, loading data...')
-        await loadData()
-      })
-
-      // Fallback: if load event doesn't fire, try after a timeout
-      setTimeout(async () => {
-        console.log('Timeout fallback: loading data...')
-        await loadData()
-      }, 3000)
-
-      // Add debug events
-      map.current.on('styledata', () => {
-        console.log('Map style loaded successfully')
+      // Add a basic layer after the map loads
+      map.current.on('load', () => {
+        console.log('Map load event fired')
+        setIsLoading(false)
+        
+        // Add a simple background
+        if (map.current) {
+          map.current.addSource('simple-bg', {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: []
+            }
+          })
+          
+          // Set globe projection
+          map.current.setProjection({
+            type: 'globe'
+          })
+          console.log('Globe projection set')
+        }
       })
 
       map.current.on('error', (e) => {
         console.error('Map error:', e)
+        setError(`Map error: ${e.error?.message || 'Unknown error'}`)
+        setIsLoading(false)
       })
 
-      map.current.on('tiledataloading', () => {
-        console.log('Loading tiles...')
-      })
-
-      map.current.on('data', (e) => {
-        console.log('Map data event:', e.type, e.dataType)
-      })
+      // Force set loading to false after a timeout if nothing happens
+      setTimeout(() => {
+        if (isLoading) {
+          console.log('Timeout reached, forcing loading to false')
+          setIsLoading(false)
+        }
+      }, 5000)
 
     } catch (err) {
       console.error('Failed to initialize MapLibre:', err)
       setError(err instanceof Error ? err.message : 'Failed to initialize map')
+      setIsLoading(false)
     }
 
     return () => {
@@ -178,16 +197,22 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
     console.log('Adding photo markers:', photos.length)
 
+    // Check if source already exists to prevent "source already exists" error
+    if (map.current.getSource('photos')) {
+      console.log('Photos source already exists, skipping addition')
+      return
+    }
+
     // Create GeoJSON source for photo markers
-    const photoFeatures = photos.map((photo, index) => ({
-      type: 'Feature',
+    const photoFeatures: GeoJSON.Feature[] = photos.map((photo, index) => ({
+      type: 'Feature' as const,
       properties: {
         photo: JSON.stringify(photo), // Store photo data for click handling
         color: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'][index % 5],
         index: index
       },
       geometry: {
-        type: 'Point',
+        type: 'Point' as const,
         coordinates: [photo.location.longitude, photo.location.latitude]
       }
     }))
@@ -196,8 +221,8 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     map.current.addSource('photos', {
       type: 'geojson',
       data: {
-        type: 'FeatureCollection',
-        features: photoFeatures as any[]
+        type: 'FeatureCollection' as const,
+        features: photoFeatures
       }
     })
 
@@ -259,10 +284,16 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
   const addFlightPaths = (flightsData: {airports: Record<string, {latitude: number, longitude: number}>, flights: Array<{from: string, to: string, route: string, id: number}>}) => {
     if (!map.current) return
 
+    // Check if source already exists to prevent "source already exists" error
+    if (map.current.getSource('flights')) {
+      console.log('Flights source already exists, skipping addition')
+      return
+    }
+
     const { airports, flights } = flightsData
     
     // Convert flights to GeoJSON LineString features
-    const flightFeatures = flights.map((flight: {from: string, to: string, route: string, id: number}, index: number) => {
+    const flightFeatures: (GeoJSON.Feature | null)[] = flights.map((flight: {from: string, to: string, route: string, id: number}, index: number) => {
       const fromAirport = airports[flight.from]
       const toAirport = airports[flight.to]
       
@@ -271,28 +302,28 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       }
 
       return {
-        type: 'Feature',
+        type: 'Feature' as const,
         properties: {
           route: flight.route,
           id: flight.id.toString(),
           color: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9f43', '#ee5a6f', '#00d2d3'][index % 8]
         },
         geometry: {
-          type: 'LineString',
+          type: 'LineString' as const,
           coordinates: [
             [fromAirport.longitude, fromAirport.latitude],
             [toAirport.longitude, toAirport.latitude]
           ]
         }
       }
-    }).filter(Boolean)
+    })
 
     // Add source and layer for flight paths
     map.current.addSource('flights', {
       type: 'geojson',
       data: {
-        type: 'FeatureCollection',
-        features: flightFeatures.filter(Boolean) as any[]
+        type: 'FeatureCollection' as const,
+        features: flightFeatures.filter((f): f is GeoJSON.Feature => f !== null)
       }
     })
 
@@ -312,13 +343,19 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     })
   }
 
-  const addCountries = (countriesGeoJson: {type: string, features: Array<{properties: {ISO_A2: string}}>}) => {
+  const addCountries = (countriesGeoJson: GeoJSON.FeatureCollection) => {
     if (!map.current) return
+
+    // Check if source already exists to prevent "source already exists" error
+    if (map.current.getSource('countries')) {
+      console.log('Countries source already exists, skipping addition')
+      return
+    }
 
     // Add source and layer for countries
     map.current.addSource('countries', {
       type: 'geojson',
-      data: countriesGeoJson as any
+      data: countriesGeoJson
     })
 
     map.current.addLayer({
