@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import Scene from './components/Scene'
+import MapLibreScene from './components/MapLibreScene'
 import PhotoOverlay from './components/PhotoOverlay'
 import { type Photo } from './services/photoService'
 
 function App() {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null)
+  const [useMapLibre, setUseMapLibre] = useState(false)
 
   const handlePhotoClick = (photo: Photo) => {
     setSelectedPhoto(photo)
@@ -18,37 +20,68 @@ function App() {
 
   return (
     <div className="canvas-container">
-      <Canvas
-        camera={{
-          position: [0, 0, 350],
-          fov: 50,
-        }}
-        gl={{
-          antialias: true,
-          alpha: true,
-        }}
-        dpr={[1, 2]} // Support for high DPI displays
-      >
-        {/* Mobile-friendly orbit controls */}
-        <OrbitControls
-          enablePan={false}
-          enableZoom={true}
-          enableRotate={true}
-          zoomSpeed={0.3}
-          rotateSpeed={0.3}
-          minDistance={101}
-          maxDistance={10000}
-          dampingFactor={0.1}
-          minPolarAngle={0}
-          maxPolarAngle={Math.PI}
-          touches={{
-            ONE: 0, // TOUCH.ROTATE
-            TWO: 3, // TOUCH.DOLLY (zoom only, no pan)
+      {/* Toggle button to switch between implementations */}
+      <div style={{
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        zIndex: 1000,
+        background: 'rgba(0,0,0,0.8)',
+        color: 'white',
+        padding: '10px',
+        borderRadius: '5px',
+        fontSize: '14px'
+      }}>
+        <button 
+          onClick={() => setUseMapLibre(!useMapLibre)}
+          style={{
+            background: useMapLibre ? '#22c55e' : '#ef4444',
+            color: 'white',
+            border: 'none',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            cursor: 'pointer'
           }}
-        />
-        
-        <Scene onPhotoClick={handlePhotoClick} />
-      </Canvas>
+        >
+          {useMapLibre ? 'MapLibre (New)' : 'Three.js Globe (Current)'}
+        </button>
+      </div>
+
+      {useMapLibre ? (
+        <MapLibreScene onPhotoClick={handlePhotoClick} />
+      ) : (
+        <Canvas
+          camera={{
+            position: [0, 0, 350],
+            fov: 50,
+          }}
+          gl={{
+            antialias: true,
+            alpha: true,
+          }}
+          dpr={[1, 2]} // Support for high DPI displays
+        >
+          {/* Mobile-friendly orbit controls */}
+          <OrbitControls
+            enablePan={false}
+            enableZoom={true}
+            enableRotate={true}
+            zoomSpeed={0.3}
+            rotateSpeed={0.3}
+            minDistance={101}
+            maxDistance={10000}
+            dampingFactor={0.1}
+            minPolarAngle={0}
+            maxPolarAngle={Math.PI}
+            touches={{
+              ONE: 0, // TOUCH.ROTATE
+              TWO: 3, // TOUCH.DOLLY (zoom only, no pan)
+            }}
+          />
+          
+          <Scene onPhotoClick={handlePhotoClick} />
+        </Canvas>
+      )}
       
       <PhotoOverlay 
         photo={selectedPhoto} 
