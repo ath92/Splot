@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import * as pmtiles from 'pmtiles'
 import type { Feature, FeatureCollection } from 'geojson'
 import { 
   fetchPhotos, 
@@ -9,6 +10,7 @@ import {
 import { 
   getFlightsData
 } from '../services/flightsService'
+import { protomapsStyle } from '../styles/protomapsStyle'
 
 interface MapLibreSceneProps {
   onPhotoClick: (photo: Photo) => void
@@ -27,10 +29,14 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight)
 
     try {
-      // Try the most minimal possible MapLibre setup
+      // Register PMTiles protocol for MapLibre GL JS
+      const protocol = new pmtiles.Protocol()
+      maplibregl.addProtocol('pmtiles', protocol.tile)
+
+      // Initialize MapLibre map with protomaps PMTiles style
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: 'https://demotiles.maplibre.org/style.json',
+        style: protomapsStyle,
         center: [0, 0],
         zoom: 1
       })
@@ -168,6 +174,8 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
     return () => {
       map.current?.remove()
+      // Clean up PMTiles protocol when component unmounts
+      maplibregl.removeProtocol('pmtiles')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // loadData is intentionally not in dependencies to avoid recreation
