@@ -36,7 +36,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       
       // Configuration for custom pmtiles
       const PMTILES_URL = import.meta.env.VITE_PMTILES_URL || 
-        'https://0269140aa6c636355368c840cf5a95b0.r2.cloudflarestorage.com/tiles/world-tiles.pmtiles';
+        'https://pub-a951d20402694897ae275d1758f4675c.r2.dev/world-tiles.pmtiles';
       
       console.log('Using pmtiles URL:', PMTILES_URL);
       
