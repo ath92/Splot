@@ -10,7 +10,7 @@ import {
 import { 
   getFlightsData
 } from '../services/flightsService'
-import { createProtomapsStyle } from '../services/mapStyleService'
+import { createProtomapsStyle, createOfflineStyle } from '../services/mapStyleService'
 
 interface MapLibreSceneProps {
   onPhotoClick: (photo: Photo) => void
@@ -25,8 +25,9 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
   useEffect(() => {
     if (!mapContainer.current || map.current) return
 
-    console.log('Initializing MapLibre map, container:', mapContainer.current)
-    console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight)
+    const container = mapContainer.current; // Store reference to ensure it's not null
+    console.log('Initializing MapLibre map, container:', container)
+    console.log('Container dimensions:', container.offsetWidth, 'x', container.offsetHeight)
 
     // Async initialization function
     const initializeMap = async () => {
@@ -72,14 +73,29 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
           console.log('Using custom protomaps style with URL:', PMTILES_URL);
         } catch (error) {
           console.warn('PMTiles URL is not accessible or style creation failed, falling back to demo tiles:', error);
-          mapStyle = 'https://demotiles.maplibre.org/style.json';
-          usingFallback = true;
+          
+          // Try demo tiles first
+          try {
+            console.log('Testing demo tiles accessibility...')
+            const demoResponse = await fetch('https://demotiles.maplibre.org/style.json')
+            if (!demoResponse.ok) {
+              throw new Error(`Demo tiles returned ${demoResponse.status}: ${demoResponse.statusText}`)
+            }
+            mapStyle = 'https://demotiles.maplibre.org/style.json';
+            usingFallback = true;
+            console.log('Using demo tiles as fallback')
+          } catch (demoError) {
+            console.warn('Demo tiles also not accessible, using offline style:', demoError);
+            mapStyle = createOfflineStyle();
+            usingFallback = true;
+            console.log('Using minimal offline style')
+          }
         }
       
       // Initialize MapLibre map
       console.log('Initializing map with style:', typeof mapStyle === 'string' ? mapStyle : 'custom style object')
       map.current = new maplibregl.Map({
-        container: mapContainer.current,
+        container: container,
         style: mapStyle as any, // Type assertion for custom style
         center: [0, 0],
         zoom: 1
@@ -108,7 +124,11 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       map.current.on('load', async () => {
         console.log('Map load event fired successfully')
         if (usingFallback) {
-          console.log('Map loaded successfully using fallback demo tiles')
+          if (typeof mapStyle === 'string') {
+            console.log('Map loaded successfully using fallback demo tiles')
+          } else {
+            console.log('Map loaded successfully using minimal offline style')
+          }
         } else {
           console.log('Map loaded successfully using custom PMTiles')
         }
@@ -213,8 +233,6 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       map.current.on('error', (e: maplibregl.ErrorEvent) => {
         console.error('Map error details:', {
           error: e.error,
-          sourceId: e.sourceId,
-          tile: e.tile,
           type: e.type
         })
         
@@ -232,15 +250,21 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
           }
         }
         
-        // If this is a style loading error, try to fallback to demo tiles
+        // If this is a style loading error, try to fallback to demo tiles, then offline
         if (e.error?.message?.includes('style') || e.error?.message?.includes('Load failed')) {
           console.log('Attempting fallback to demo tiles due to error:', e.error?.message)
           try {
             map.current?.setStyle('https://demotiles.maplibre.org/style.json')
             errorMessage = 'Map error: Using fallback map due to loading issues. Some features may be limited.'
           } catch (fallbackError) {
-            console.error('Fallback to demo tiles also failed:', fallbackError)
-            errorMessage = 'Map error: Failed to load both primary and fallback map styles. Please refresh the page.'
+            console.error('Fallback to demo tiles also failed, trying offline style:', fallbackError)
+            try {
+              map.current?.setStyle(createOfflineStyle())
+              errorMessage = 'Map error: Using minimal offline map. Please check your internet connection for full features.'
+            } catch (offlineError) {
+              console.error('Even offline style failed:', offlineError)
+              errorMessage = 'Map error: Failed to load any map style. Please refresh the page.'
+            }
           }
         }
         

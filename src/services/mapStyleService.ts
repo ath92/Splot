@@ -94,3 +94,19 @@ export const createProtomapsStyle = (pmtilesUrl: string) => ({
     }
   ]
 });
+
+// Minimal offline style that works without any external dependencies
+export const createOfflineStyle = () => ({
+  "version": 8,
+  "name": "Splot Offline",
+  "sources": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#1a1a1a"
+      }
+    }
+  ]
+});
