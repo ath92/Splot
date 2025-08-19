@@ -297,6 +297,7 @@ html, body {
   flex: 1;
   white-space: pre-wrap;
   word-break: break-word;
+  color: #fff;
 }
 
 .debug-console-message-log .debug-console-type {
