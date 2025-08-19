@@ -209,18 +209,20 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     })
 
     // Add layer for photo markers
-    map.current.addLayer({
-      id: 'photos',
-      type: 'circle',
-      source: 'photos',
-      paint: {
-        'circle-radius': 12,
-        'circle-color': ['get', 'color'],
-        'circle-stroke-width': 3,
-        'circle-stroke-color': '#ffffff',
-        'circle-opacity': 0.9
-      }
-    })
+    if (!map.current.getLayer('photos')) {
+      map.current.addLayer({
+        id: 'photos',
+        type: 'circle',
+        source: 'photos',
+        paint: {
+          'circle-radius': 12,
+          'circle-color': ['get', 'color'],
+          'circle-stroke-width': 3,
+          'circle-stroke-color': '#ffffff',
+          'circle-opacity': 0.9
+        }
+      })
+    }
 
     // Add click handler for photo markers using map events
     map.current.on('click', 'photos', (e: maplibregl.MapMouseEvent & {features?: unknown[]}) => {
@@ -309,20 +311,23 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       }
     })
 
-    map.current.addLayer({
-      id: 'flights',
-      type: 'line',
-      source: 'flights',
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round'
-      },
-      paint: {
-        'line-color': ['get', 'color'],
-        'line-width': 3,
-        'line-opacity': 0.8
-      }
-    })
+    // Add layer for flight paths
+    if (!map.current.getLayer('flights')) {
+      map.current.addLayer({
+        id: 'flights',
+        type: 'line',
+        source: 'flights',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': 3,
+          'line-opacity': 0.8
+        }
+      })
+    }
   }
 
   const addCountries = (countriesGeoJson: FeatureCollection) => {
@@ -340,26 +345,32 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       data: countriesGeoJson
     })
 
-    map.current.addLayer({
-      id: 'countries-fill',
-      type: 'fill',
-      source: 'countries',
-      paint: {
-        'fill-color': '#22c55e',
-        'fill-opacity': 0.15
-      }
-    })
+    // Check if layer already exists to prevent "layer already exists" error
+    if (!map.current.getLayer('countries-fill')) {
+      map.current.addLayer({
+        id: 'countries-fill',
+        type: 'fill',
+        source: 'countries',
+        paint: {
+          'fill-color': '#22c55e',
+          'fill-opacity': 0.15
+        }
+      })
+    }
 
-    map.current.addLayer({
-      id: 'countries-stroke',
-      type: 'line',
-      source: 'countries',
-      paint: {
-        'line-color': '#065f46',
-        'line-width': 1,
-        'line-opacity': 0.6
-      }
-    })
+    // Check if layer already exists to prevent "layer already exists" error
+    if (!map.current.getLayer('countries-stroke')) {
+      map.current.addLayer({
+        id: 'countries-stroke',
+        type: 'line',
+        source: 'countries',
+        paint: {
+          'line-color': '#065f46',
+          'line-width': 1,
+          'line-opacity': 0.6
+        }
+      })
+    }
   }
 
   return (
