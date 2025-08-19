@@ -57,7 +57,7 @@ Use the GitHub Actions workflow:
 
 The generated tiles are automatically used by the Splot map via:
 
-- URL: `https://0269140aa6c636355368c840cf5a95b0.r2.cloudflarestorage.com/tiles/world-tiles.pmtiles`
+- URL: `https://pub-a951d20402694897ae275d1758f4675c.r2.dev/world-tiles.pmtiles`
 - Protocol: PMTiles via MapLibre GL JS
 - Fallback: Demo tiles if custom tiles unavailable
 
