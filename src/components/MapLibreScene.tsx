@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import type { Feature, FeatureCollection } from 'geojson'
 import { 
   fetchPhotos, 
   type Photo 
@@ -49,7 +50,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       }, 100)
 
       // Add a basic layer after the map loads
-      map.current.on('load', () => {
+      map.current.on('load', async () => {
         console.log('Map load event fired')
         setIsLoading(false)
         
@@ -68,10 +69,97 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
             type: 'globe'
           })
           console.log('Globe projection set')
+          
+          // Load data after map is ready
+          try {
+            // Load photos
+            let photosResponse
+            try {
+              photosResponse = await fetchPhotos()
+            } catch {
+              console.log('API not available, using fallback mock data for development')
+              // Create minimal fallback data for development
+              photosResponse = {
+                photos: [
+                  {
+                    filename: 'test-photo-1.jpg',
+                    url: 'https://picsum.photos/800/600?random=1',
+                    location: { latitude: 40.7128, longitude: -74.0060, altitude: 10 },
+                    uploadedAt: '2024-01-01T12:00:00Z',
+                    fileSize: 1024000,
+                    originalName: 'New York City.jpg',
+                    cameraMake: 'Canon',
+                    cameraModel: 'EOS R5',
+                    dateTime: '2024-01-01T12:00:00Z'
+                  },
+                  {
+                    filename: 'test-photo-2.jpg',
+                    url: 'https://picsum.photos/800/600?random=2',
+                    location: { latitude: 51.5074, longitude: -0.1278, altitude: 11 },
+                    uploadedAt: '2024-01-02T12:00:00Z',
+                    fileSize: 1536000,
+                    originalName: 'London.jpg',
+                    cameraMake: 'Sony',
+                    cameraModel: 'A7R IV',
+                    dateTime: '2024-01-02T12:00:00Z'
+                  },
+                  {
+                    filename: 'test-photo-3.jpg',
+                    url: 'https://picsum.photos/800/600?random=3',
+                    location: { latitude: 35.6762, longitude: 139.6503, altitude: 40 },
+                    uploadedAt: '2024-01-03T12:00:00Z',
+                    fileSize: 2048000,
+                    originalName: 'Tokyo.jpg',
+                    cameraMake: 'Nikon',
+                    cameraModel: 'D850',
+                    dateTime: '2024-01-03T12:00:00Z'
+                  }
+                ],
+                count: 3
+              }
+            }
+
+            // Add photo markers
+            if (photosResponse.photos.length > 0) {
+              addPhotoMarkers(photosResponse.photos)
+              console.log(`Loaded ${photosResponse.count} photos with GPS data`)
+            }
+
+            // Load flights data
+            try {
+              const flightsData = getFlightsData()
+              addFlightPaths(flightsData)
+              console.log(`Loaded flight routes`)
+            } catch (err) {
+              console.warn('Failed to load flights data:', err instanceof Error ? err.message : 'Failed to load flights')
+            }
+
+            // Load countries
+            try {
+              const countriesResponse = await fetch('/ne_110m_admin_0_countries.geojson')
+              const countriesGeoJson = await countriesResponse.json()
+              
+              // Filter out Antarctica (AQ) as in the original
+              const filteredCountries = {
+                ...countriesGeoJson,
+                features: countriesGeoJson.features.filter((d: {properties: {ISO_A2: string}}) => d.properties.ISO_A2 !== 'AQ')
+              }
+              
+              addCountries(filteredCountries)
+              console.log(`Loaded ${filteredCountries.features.length} countries`)
+              
+            } catch (err) {
+              console.error('Failed to load countries:', err)
+              setError(err instanceof Error ? err.message : 'Failed to load countries')
+            }
+          } catch (err) {
+            console.error('Error loading data:', err)
+            setError(err instanceof Error ? err.message : 'Failed to load data')
+          }
         }
       })
 
-      map.current.on('error', (e) => {
+      map.current.on('error', (e: maplibregl.ErrorEvent) => {
         console.error('Map error:', e)
         setError(`Map error: ${e.error?.message || 'Unknown error'}`)
         setIsLoading(false)
@@ -97,100 +185,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // loadData is intentionally not in dependencies to avoid recreation
 
-  const loadData = async () => {
-    if (!map.current) return
 
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      // Load photos
-      let photosResponse
-      try {
-        photosResponse = await fetchPhotos()
-      } catch {
-        console.log('API not available, using fallback mock data for development')
-        // Create minimal fallback data for development
-        photosResponse = {
-          photos: [
-            {
-              filename: 'test-photo-1.jpg',
-              url: 'https://picsum.photos/800/600?random=1',
-              location: { latitude: 40.7128, longitude: -74.0060, altitude: 10 },
-              uploadedAt: '2024-01-01T12:00:00Z',
-              fileSize: 1024000,
-              originalName: 'New York City.jpg',
-              cameraMake: 'Canon',
-              cameraModel: 'EOS R5',
-              dateTime: '2024-01-01T12:00:00Z'
-            },
-            {
-              filename: 'test-photo-2.jpg',
-              url: 'https://picsum.photos/800/600?random=2',
-              location: { latitude: 51.5074, longitude: -0.1278, altitude: 11 },
-              uploadedAt: '2024-01-02T12:00:00Z',
-              fileSize: 1536000,
-              originalName: 'London.jpg',
-              cameraMake: 'Sony',
-              cameraModel: 'A7R IV',
-              dateTime: '2024-01-02T12:00:00Z'
-            },
-            {
-              filename: 'test-photo-3.jpg',
-              url: 'https://picsum.photos/800/600?random=3',
-              location: { latitude: 35.6762, longitude: 139.6503, altitude: 40 },
-              uploadedAt: '2024-01-03T12:00:00Z',
-              fileSize: 2048000,
-              originalName: 'Tokyo.jpg',
-              cameraMake: 'Nikon',
-              cameraModel: 'D850',
-              dateTime: '2024-01-03T12:00:00Z'
-            }
-          ],
-          count: 3
-        }
-      }
-
-      // Add photo markers
-      if (photosResponse.photos.length > 0) {
-        addPhotoMarkers(photosResponse.photos)
-        console.log(`Loaded ${photosResponse.count} photos with GPS data`)
-      }
-
-      // Load flights data
-      try {
-        const flightsData = getFlightsData()
-        addFlightPaths(flightsData)
-        console.log(`Loaded flight routes`)
-      } catch (err) {
-        console.warn('Failed to load flights data:', err instanceof Error ? err.message : 'Failed to load flights')
-      }
-
-      // Load countries
-      try {
-        const countriesResponse = await fetch('/ne_110m_admin_0_countries.geojson')
-        const countriesGeoJson = await countriesResponse.json()
-        
-        // Filter out Antarctica (AQ) as in the original
-        const filteredCountries = {
-          ...countriesGeoJson,
-          features: countriesGeoJson.features.filter((d: {properties: {ISO_A2: string}}) => d.properties.ISO_A2 !== 'AQ')
-        }
-        
-        addCountries(filteredCountries)
-        console.log(`Loaded ${filteredCountries.features.length} countries`)
-        
-      } catch (err) {
-        console.error('Failed to load countries:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load countries')
-      }
-    } catch (err) {
-      console.error('Error loading data:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load data')
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const addPhotoMarkers = (photos: Photo[]) => {
     if (!map.current) return
@@ -204,7 +199,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     }
 
     // Create GeoJSON source for photo markers
-    const photoFeatures: GeoJSON.Feature[] = photos.map((photo, index) => ({
+    const photoFeatures: Feature[] = photos.map((photo, index) => ({
       type: 'Feature' as const,
       properties: {
         photo: JSON.stringify(photo), // Store photo data for click handling
@@ -241,9 +236,9 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     })
 
     // Add click handler for photo markers using map events
-    map.current.on('click', 'photos', (e) => {
+    map.current.on('click', 'photos', (e: maplibregl.MapMouseEvent & {features?: unknown[]}) => {
       if (e.features && e.features.length > 0) {
-        const feature = e.features[0]
+        const feature = e.features[0] as {properties?: {photo?: string}}
         if (feature.properties && feature.properties.photo) {
           try {
             const photo = JSON.parse(feature.properties.photo)
@@ -293,7 +288,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     const { airports, flights } = flightsData
     
     // Convert flights to GeoJSON LineString features
-    const flightFeatures: (GeoJSON.Feature | null)[] = flights.map((flight: {from: string, to: string, route: string, id: number}, index: number) => {
+    const flightFeatures: (Feature | null)[] = flights.map((flight: {from: string, to: string, route: string, id: number}, index: number) => {
       const fromAirport = airports[flight.from]
       const toAirport = airports[flight.to]
       
@@ -323,7 +318,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       type: 'geojson',
       data: {
         type: 'FeatureCollection' as const,
-        features: flightFeatures.filter((f): f is GeoJSON.Feature => f !== null)
+        features: flightFeatures.filter((f): f is Feature => f !== null)
       }
     })
 
@@ -343,7 +338,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     })
   }
 
-  const addCountries = (countriesGeoJson: GeoJSON.FeatureCollection) => {
+  const addCountries = (countriesGeoJson: FeatureCollection) => {
     if (!map.current) return
 
     // Check if source already exists to prevent "source already exists" error
