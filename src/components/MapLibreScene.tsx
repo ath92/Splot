@@ -9,7 +9,7 @@ import {
 import { 
   getFlightsData
 } from '../services/flightsService'
-import { setupPMTilesProtocol, createDirectPMTilesStyle } from '../services/pmtilesService'
+import { createProtomapsStyle } from '../services/mapStyleService'
 
 interface MapLibreSceneProps {
   onPhotoClick: (photo: Photo) => void
@@ -28,39 +28,21 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight)
 
     try {
-      // Setup PMTiles protocol for direct file access (protomaps.com approach)
-      setupPMTilesProtocol();
+      // Configuration for custom pmtiles - use worker endpoint instead of direct R2
+      const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://splot-photo-worker.tomhutman.workers.dev';
+      const PMTILES_URL = import.meta.env.VITE_PMTILES_URL || 
+        `${WORKER_URL}/tiles/world-tiles.json`;
       
-      // Configuration for PMTiles - use direct file access instead of worker proxy
-      const PMTILES_FILE_URL = import.meta.env.VITE_PMTILES_FILE_URL || 
-        'https://pub-a951d20402694897ae275d1758f4675c.r2.dev/world-tiles.pmtiles';
+      console.log('Using pmtiles TileJSON URL:', PMTILES_URL);
       
-      console.log('PMTiles file URL available:', PMTILES_FILE_URL);
-      
-      // Due to browser security restrictions and ad blockers potentially blocking PMTiles files,
-      // we'll use the demo tiles as primary and PMTiles as an optional enhancement
-      let mapStyle: string | object;
-      
-      // Try PMTiles first, but fallback gracefully to demo tiles
-      const shouldUsePMTiles = import.meta.env.VITE_USE_PMTILES === 'true';
-      
-      if (shouldUsePMTiles) {
-        try {
-          mapStyle = createDirectPMTilesStyle(PMTILES_FILE_URL);
-          console.log('Using direct PMTiles style for URL:', PMTILES_FILE_URL);
-        } catch (styleError) {
-          console.warn('Failed to create direct PMTiles style, falling back to demo tiles:', styleError);
-          mapStyle = 'https://demotiles.maplibre.org/style.json';
-        }
-      } else {
-        console.log('Using demo tiles (set VITE_USE_PMTILES=true to enable PMTiles)');
-        mapStyle = 'https://demotiles.maplibre.org/style.json';
-      }
+      // Use custom protomaps style with worker endpoint
+      const mapStyle = createProtomapsStyle(PMTILES_URL);
+      console.log('Using custom protomaps style with worker endpoint');
       
       // Initialize MapLibre map
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: mapStyle as string | maplibregl.StyleSpecification,
+        style: mapStyle as maplibregl.StyleSpecification,
         center: [0, 0],
         zoom: 1
       })
@@ -75,35 +57,9 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         }
       }, 100)
 
-      // Set up load event with fallback
-      let loadHandled = false;
-      let tileLoadAttempted = false;
-      let tileLoadFailed = false;
-      
+      // Set up load event
       const handleMapLoad = async () => {
-        if (loadHandled) return;
-        loadHandled = true;
-        
         console.log('Map load event fired')
-        
-        // Check if we should fallback to demo tiles due to PMTiles loading issues
-        if (tileLoadFailed) {
-          console.log('PMTiles tiles failed to load, switching to demo style');
-          try {
-            map.current?.setStyle('https://demotiles.maplibre.org/style.json');
-            await new Promise(resolve => {
-              const onStyleLoad = () => {
-                console.log('Demo style loaded successfully');
-                map.current?.off('style.load', onStyleLoad);
-                resolve(undefined);
-              };
-              map.current?.on('style.load', onStyleLoad);
-            });
-          } catch (error) {
-            console.error('Failed to load demo style:', error);
-          }
-        }
-        
         setIsLoading(false)
         
         // Set globe projection
@@ -186,68 +142,11 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
       map.current.on('load', handleMapLoad)
 
-      // Fallback: if map doesn't load in 10 seconds, try to proceed anyway
-      setTimeout(() => {
-        if (!loadHandled) {
-          console.log('Fallback: map load event did not fire, proceeding anyway')
-          handleMapLoad()
-        }
-      }, 10000)
-
       map.current.on('error', (e: maplibregl.ErrorEvent) => {
         console.error('Map error:', e)
-        console.error('Error details:', e.error)
-        console.error('Error type:', e.error?.constructor?.name)
-        console.error('Error stack:', (e.error as any)?.stack)
-        
-        // Check if this is a tile loading error due to network blocking
-        if (e.error?.message?.includes('404') || 
-            e.error?.message?.includes('Failed to fetch') ||
-            e.error?.message?.includes('ERR_BLOCKED_BY_CLIENT')) {
-          console.warn('Detected tile loading failure due to network blocking, marking for fallback');
-          tileLoadFailed = true;
-        }
-        
         setError(`Map error: ${e.error?.message || 'Unknown error'}`)
         setIsLoading(false)
       })
-
-      // Add source-specific error handling
-      map.current.on('sourcedataloading', (e) => {
-        console.log('Source data loading:', e.sourceId, e.dataType);
-        if (e.sourceId === 'protomaps' && e.dataType === 'source') {
-          tileLoadAttempted = true;
-        }
-      });
-
-      map.current.on('sourcedata', (e) => {
-        console.log('Source data loaded:', e.sourceId, e.dataType, e.isSourceLoaded);
-        if (e.sourceId === 'protomaps' && e.isSourceLoaded === false && tileLoadAttempted) {
-          // PMTiles source failed to load tiles
-          console.warn('PMTiles source failed to load tiles');
-          tileLoadFailed = true;
-        }
-      });
-
-      map.current.on('styleimagemissing', (e) => {
-        console.warn('Style image missing:', e.id);
-      });
-
-      map.current.on('data', (e) => {
-        if (e.dataType === 'style') {
-          console.log('Style loaded');
-        } else if (e.dataType === 'source') {
-          console.log('Source data event:', (e as any).sourceId, (e as any).isSourceLoaded);
-        }
-      });
-
-      // Additional fallback: if tiles don't load in 8 seconds, mark as failed
-      setTimeout(() => {
-        if (!tileLoadFailed && tileLoadAttempted && !loadHandled) {
-          console.log('Fallback: tiles did not load in time, marking as failed');
-          tileLoadFailed = true;
-        }
-      }, 8000);
 
     } catch (err) {
       console.error('Failed to initialize MapLibre:', err)
