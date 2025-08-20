@@ -9,7 +9,7 @@ import {
 import { 
   getFlightsData
 } from '../services/flightsService'
-import { createProtomapsStyle } from '../services/mapStyleService'
+import { createProtomapsLightStyle } from '../services/mapStyleService'
 
 interface MapLibreSceneProps {
   onPhotoClick: (photo: Photo) => void
@@ -35,13 +35,13 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       
       console.log('Using pmtiles TileJSON URL:', PMTILES_URL);
       
-      // Try to use custom protomaps style first, fallback to demo tiles
+      // Use Protomaps light flavor basemap with custom tiles, fallback to demo tiles
       let mapStyle: string | object;
       try {
-        mapStyle = createProtomapsStyle(PMTILES_URL);
-        console.log('Using custom protomaps style with worker endpoint');
+        mapStyle = createProtomapsLightStyle(PMTILES_URL);
+        console.log('Using Protomaps light flavor basemap with custom tiles');
       } catch (styleError) {
-        console.warn('Failed to create custom style, falling back to demo tiles:', styleError);
+        console.warn('Failed to create light style, falling back to demo tiles:', styleError);
         mapStyle = 'https://demotiles.maplibre.org/style.json';
       }
       
