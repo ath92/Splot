@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MapLibre Test</title>
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        console.log('Creating MapLibre map...');
+        
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://demotiles.maplibre.org/style.json',
+            center: [0, 0],
+            zoom: 2
+        });
+        
+        map.on('load', () => {
+            console.log('Map loaded successfully!');
+        });
+        
+        map.on('error', (e) => {
+            console.error('Map error:', e);
+        });
+        
+        console.log('Map instance created:', map);
+        window.testMap = map;
+    </script>
+</body>
+</html>

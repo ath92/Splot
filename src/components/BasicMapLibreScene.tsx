@@ -28,49 +28,33 @@ export default function BasicMapLibreScene({ onPhotoClick: _ }: BasicMapLibreSce
       
       console.log('Basic map using pmtiles TileJSON URL:', PMTILES_URL);
       
-      // For the basic component, try PMTiles first, then fallback to simple OSM tiles
-      let mapStyle;
-      try {
-        mapStyle = createProtomapsStyle(PMTILES_URL);
-        console.log('Basic map using custom protomaps style with worker endpoint');
-      } catch (styleError) {
-        console.warn('Basic map failed to create custom style, using OSM fallback:', styleError);
-        // Simple OSM style as fallback
-        mapStyle = {
-          version: 8,
-          name: "Basic OSM",
-          sources: {
-            "osm": {
-              type: "raster",
-              tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-              tileSize: 256,
-              attribution: "© OpenStreetMap contributors"
-            }
-          },
-          layers: [
-            {
-              id: "background",
-              type: "background",
-              paint: { "background-color": "#1a1a1a" }
-            },
-            {
-              id: "osm-tiles",
-              type: "raster",
-              source: "osm"
-            }
-          ]
-        };
-      }
+      // For debugging, let's use a known working MapLibre style
+      const mapStyle = 'https://demotiles.maplibre.org/style.json';
+      console.log('Basic map using MapLibre demo style for debugging');
+      
+      console.log('About to create MapLibre map with style:', mapStyle);
+      console.log('Container element:', mapContainer.current);
       
       // Initialize MapLibre map with basic configuration
-      map.current = new maplibregl.Map({
-        container: mapContainer.current,
-        style: mapStyle as maplibregl.StyleSpecification,
-        center: [0, 0],
-        zoom: 2
-      })
+      try {
+        map.current = new maplibregl.Map({
+          container: mapContainer.current,
+          style: mapStyle,
+          center: [0, 0],
+          zoom: 2
+        })
 
-      console.log('Basic MapLibre map initialized:', map.current)
+        console.log('Basic MapLibre map created successfully:', map.current);
+        
+        // Expose to window for debugging
+        (window as any).debugMap = map.current;
+        
+      } catch (mapError) {
+        console.error('Failed to create MapLibre map:', mapError);
+        setError(`Failed to create map: ${mapError instanceof Error ? mapError.message : 'Unknown error'}`);
+        setIsLoading(false);
+        return;
+      }
 
       // Force the map to render by triggering a resize
       setTimeout(() => {
@@ -91,13 +75,38 @@ export default function BasicMapLibreScene({ onPhotoClick: _ }: BasicMapLibreSce
         clearTimeout(loadTimeout)
         console.log('Basic map load event fired')
         setIsLoading(false)
+        
+        // Try to trigger repaint and check if canvas appears
+        setTimeout(() => {
+          if (map.current) {
+            console.log('Triggering map repaint...');
+            map.current.triggerRepaint();
+            
+            // Check for canvas
+            const canvases = mapContainer.current?.querySelectorAll('canvas');
+            console.log('Canvas count after repaint:', canvases?.length || 0);
+          }
+        }, 1000);
       })
 
+      // Add more detailed error handling
       map.current.on('error', (e: maplibregl.ErrorEvent) => {
         clearTimeout(loadTimeout)
         console.error('Basic map error:', e)
         setError(`Basic map error: ${e.error?.message || 'Unknown error'}`)
         setIsLoading(false)
+      })
+
+      map.current.on('styledata', () => {
+        console.log('Basic map style data loaded')
+      })
+
+      map.current.on('sourcedata', (e) => {
+        console.log('Basic map source data loaded:', e.sourceId, e.isSourceLoaded)
+      })
+
+      map.current.on('data', (e) => {
+        console.log('Basic map data event:', e.type, e.sourceId)
       })
 
     } catch (err) {
