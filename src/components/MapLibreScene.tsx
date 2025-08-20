@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import type { Feature, FeatureCollection } from 'geojson'
+import type { Feature } from 'geojson'
 import { 
   fetchPhotos, 
   type Photo 
@@ -139,24 +139,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               console.warn('Failed to load flights data:', err instanceof Error ? err.message : 'Failed to load flights')
             }
 
-            // Load countries
-            try {
-              const countriesResponse = await fetch('/ne_110m_admin_0_countries.geojson')
-              const countriesGeoJson = await countriesResponse.json()
-              
-              // Filter out Antarctica (AQ) as in the original
-              const filteredCountries = {
-                ...countriesGeoJson,
-                features: countriesGeoJson.features.filter((d: {properties: {ISO_A2: string}}) => d.properties.ISO_A2 !== 'AQ')
-              }
-              
-              addCountries(filteredCountries)
-              console.log(`Loaded ${filteredCountries.features.length} countries`)
-              
-            } catch (err) {
-              console.error('Failed to load countries:', err)
-              setError(err instanceof Error ? err.message : 'Failed to load countries')
-            }
+
           } catch (err) {
             console.error('Error loading data:', err)
             setError(err instanceof Error ? err.message : 'Failed to load data')
@@ -340,48 +323,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     }
   }
 
-  const addCountries = (countriesGeoJson: FeatureCollection) => {
-    if (!map.current) return
 
-    // Check if source already exists to prevent "source already exists" error
-    if (map.current.getSource('countries')) {
-      console.log('Countries source already exists, skipping addition')
-      return
-    }
-
-    // Add source and layer for countries
-    map.current.addSource('countries', {
-      type: 'geojson',
-      data: countriesGeoJson
-    })
-
-    // Check if layer already exists to prevent "layer already exists" error
-    if (!map.current.getLayer('countries-fill')) {
-      map.current.addLayer({
-        id: 'countries-fill',
-        type: 'fill',
-        source: 'countries',
-        paint: {
-          'fill-color': '#22c55e',
-          'fill-opacity': 0.15
-        }
-      })
-    }
-
-    // Check if layer already exists to prevent "layer already exists" error
-    if (!map.current.getLayer('countries-stroke')) {
-      map.current.addLayer({
-        id: 'countries-stroke',
-        type: 'line',
-        source: 'countries',
-        paint: {
-          'line-color': '#065f46',
-          'line-width': 1,
-          'line-opacity': 0.6
-        }
-      })
-    }
-  }
 
   return (
     <div 
