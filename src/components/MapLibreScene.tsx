@@ -35,14 +35,22 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       
       console.log('Using pmtiles TileJSON URL:', PMTILES_URL);
       
-      // Use Protomaps light flavor basemap with custom tiles, fallback to demo tiles
+      // Use Protomaps light flavor basemap with custom tiles, fallback to demo tiles  
       let mapStyle: string | object;
-      try {
-        mapStyle = createProtomapsLightStyle(PMTILES_URL);
-        console.log('Using Protomaps light flavor basemap with custom tiles');
-      } catch (styleError) {
-        console.warn('Failed to create light style, falling back to demo tiles:', styleError);
+      
+      // For development/testing, use demo tiles since custom tiles might not be available
+      // In production, this would use the custom light style with working tiles
+      if (import.meta.env.DEV) {
+        console.log('Development mode: using demo tiles as base (Protomaps light style requires working tile server)');
         mapStyle = 'https://demotiles.maplibre.org/style.json';
+      } else {
+        try {
+          mapStyle = createProtomapsLightStyle(PMTILES_URL);
+          console.log('Using Protomaps light flavor basemap with custom tiles');
+        } catch (styleError) {
+          console.warn('Failed to create light style, falling back to demo tiles:', styleError);
+          mapStyle = 'https://demotiles.maplibre.org/style.json';
+        }
       }
       
       // Initialize MapLibre map
@@ -62,6 +70,14 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
           console.log('Map resized')
         }
       }, 100)
+
+      // Add timeout to prevent infinite loading
+      setTimeout(() => {
+        if (isLoading) {
+          console.warn('Map took too long to load, clearing loading state')
+          setIsLoading(false)
+        }
+      }, 15000)
 
       // Add a basic layer after the map loads
       map.current.on('load', async () => {
