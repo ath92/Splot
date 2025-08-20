@@ -32,7 +32,7 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
       "id": "land",
       "type": "fill",
       "source": "protomaps", 
-      "source-layer": "land",
+      "source-layer": "earth",
       "paint": {
         "fill-color": "#2d2d2d",
         "fill-opacity": 1
