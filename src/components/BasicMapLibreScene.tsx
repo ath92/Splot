@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { createProtomapsStyle } from '../services/mapStyleService'
 import { type Photo } from '../services/photoService'
 
 interface BasicMapLibreSceneProps {
@@ -28,9 +27,176 @@ export default function BasicMapLibreScene({ onPhotoClick: _ }: BasicMapLibreSce
       
       console.log('Basic map using pmtiles TileJSON URL:', PMTILES_URL);
       
-      // For debugging, let's use a known working MapLibre style
-      const mapStyle = 'https://demotiles.maplibre.org/style.json';
-      console.log('Basic map using MapLibre demo style for debugging');
+      // Use PMTiles with improved style configuration
+      const mapStyle = {
+        version: 8 as const,
+        name: "Improved PMTiles Style",
+        sources: {
+          "protomaps": {
+            type: "vector" as const,
+            url: PMTILES_URL
+          }
+        },
+        layers: [
+          {
+            id: "background",
+            type: "background",
+            paint: { "background-color": "#0f172a" }
+          },
+          // Earth/land base layer - this should render everywhere
+          {
+            id: "earth",
+            type: "fill",
+            source: "protomaps",
+            "source-layer": "earth",
+            paint: {
+              "fill-color": "#1e293b",
+              "fill-opacity": 1
+            }
+          },
+          // Water layer on top of earth
+          {
+            id: "water",
+            type: "fill",
+            source: "protomaps",
+            "source-layer": "water",
+            paint: {
+              "fill-color": "#1e40af",
+              "fill-opacity": 0.9
+            }
+          },
+          // Landuse areas
+          {
+            id: "landuse",
+            type: "fill",
+            source: "protomaps",
+            "source-layer": "landuse",
+            minzoom: 4,
+            filter: ["has", "pmap:kind"],
+            paint: {
+              "fill-color": [
+                "case",
+                ["==", ["get", "pmap:kind"], "park"], "#065f46",
+                ["==", ["get", "pmap:kind"], "forest"], "#064e3b", 
+                ["==", ["get", "pmap:kind"], "residential"], "#1f2937",
+                "#1e293b"
+              ],
+              "fill-opacity": 0.7
+            }
+          },
+          // Natural features  
+          {
+            id: "natural",
+            type: "fill",
+            source: "protomaps",
+            "source-layer": "natural",
+            minzoom: 4,
+            filter: ["has", "pmap:kind"],
+            paint: {
+              "fill-color": [
+                "case",
+                ["==", ["get", "pmap:kind"], "forest"], "#064e3b",
+                ["==", ["get", "pmap:kind"], "wood"], "#064e3b",
+                "#374151"
+              ],
+              "fill-opacity": 0.6
+            }
+          },
+          // Country boundaries
+          {
+            id: "boundaries-countries",
+            type: "line",
+            source: "protomaps",
+            "source-layer": "boundaries",
+            filter: ["<=", ["get", "pmap:min_admin_level"], 2],
+            paint: {
+              "line-color": "#64748b",
+              "line-width": [
+                "interpolate", ["linear"], ["zoom"],
+                0, 0.5,
+                4, 1,
+                8, 2
+              ],
+              "line-opacity": 0.8
+            }
+          },
+          // Major roads
+          {
+            id: "roads-major",
+            type: "line",
+            source: "protomaps",
+            "source-layer": "roads",
+            minzoom: 5,
+            filter: [
+              "in",
+              ["get", "pmap:kind"],
+              ["literal", ["highway", "trunk", "primary", "motorway"]]
+            ],
+            paint: {
+              "line-color": "#94a3b8",
+              "line-width": [
+                "interpolate", ["linear"], ["zoom"],
+                5, 0.5,
+                10, 2,
+                15, 6
+              ]
+            }
+          },
+          // Place labels - countries
+          {
+            id: "places-countries",
+            type: "symbol",
+            source: "protomaps",
+            "source-layer": "places",
+            maxzoom: 6,
+            filter: ["==", ["get", "pmap:kind"], "country"],
+            layout: {
+              "text-field": ["get", "name"],
+              "text-size": [
+                "interpolate", ["linear"], ["zoom"],
+                2, 10,
+                6, 14
+              ],
+              "text-anchor": "center",
+              "text-transform": "uppercase"
+            },
+            paint: {
+              "text-color": "#f1f5f9",
+              "text-halo-color": "#0f172a", 
+              "text-halo-width": 2
+            }
+          },
+          // Place labels - cities
+          {
+            id: "places-cities",
+            type: "symbol",
+            source: "protomaps",
+            "source-layer": "places",
+            minzoom: 4,
+            filter: [
+              "in",
+              ["get", "pmap:kind"],
+              ["literal", ["city", "town", "village"]]
+            ],
+            layout: {
+              "text-field": ["get", "name"],
+              "text-size": [
+                "interpolate", ["linear"], ["zoom"],
+                4, 10,
+                8, 12,
+                12, 16
+              ],
+              "text-anchor": "center"
+            },
+            paint: {
+              "text-color": "#e2e8f0",
+              "text-halo-color": "#1e293b",
+              "text-halo-width": 1.5
+            }
+          }
+        ]
+      };
+      console.log('Basic map using improved PMTiles style');
       
       console.log('About to create MapLibre map with style:', mapStyle);
       console.log('Container element:', mapContainer.current);
@@ -39,7 +205,7 @@ export default function BasicMapLibreScene({ onPhotoClick: _ }: BasicMapLibreSce
       try {
         map.current = new maplibregl.Map({
           container: mapContainer.current,
-          style: mapStyle,
+          style: mapStyle as any,
           center: [0, 0],
           zoom: 2
         })
@@ -106,7 +272,7 @@ export default function BasicMapLibreScene({ onPhotoClick: _ }: BasicMapLibreSce
       })
 
       map.current.on('data', (e) => {
-        console.log('Basic map data event:', e.type, e.sourceId)
+        console.log('Basic map data event:', e.type)
       })
 
     } catch (err) {

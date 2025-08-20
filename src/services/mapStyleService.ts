@@ -1,11 +1,10 @@
 // Custom MapLibre style for protomaps pmtiles
 export const createProtomapsStyle = (tileJsonUrl: string) => ({
-  "version": 8,
+  "version": 8 as const,
   "name": "Splot Protomaps",
-  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
   "sources": {
     "protomaps": {
-      "type": "vector",
+      "type": "vector" as const,
       "url": tileJsonUrl,
       "attribution": "© OpenStreetMap contributors, © Protomaps"
     }
@@ -13,14 +12,15 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
   "layers": [
     {
       "id": "background",
-      "type": "background",
+      "type": "background" as const,
       "paint": {
         "background-color": "#0f172a"
       }
     },
+    // Earth/land base layer - ensure this renders everywhere
     {
       "id": "earth",
-      "type": "fill",
+      "type": "fill" as const,
       "source": "protomaps",
       "source-layer": "earth",
       "paint": {
@@ -28,33 +28,45 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
         "fill-opacity": 1
       }
     },
+    // Water layer
+    {
+      "id": "water",
+      "type": "fill" as const,
+      "source": "protomaps",
+      "source-layer": "water",
+      "paint": {
+        "fill-color": "#1e40af",
+        "fill-opacity": 0.9
+      }
+    },
+    // Landuse with better filtering
     {
       "id": "landuse",
-      "type": "fill",
+      "type": "fill" as const,
       "source": "protomaps",
       "source-layer": "landuse",
-      "minzoom": 2,
-      "filter": [
-        "in",
-        ["get", "pmap:kind"],
-        ["literal", ["park", "cemetery", "hospital", "university", "school"]]
-      ],
+      "minzoom": 4,
+      "filter": ["has", "pmap:kind"],
       "paint": {
         "fill-color": [
           "case",
           ["==", ["get", "pmap:kind"], "park"], "#065f46",
-          ["==", ["get", "pmap:kind"], "cemetery"], "#374151",
-          "#1f2937"
+          ["==", ["get", "pmap:kind"], "forest"], "#064e3b",
+          ["==", ["get", "pmap:kind"], "residential"], "#1f2937",
+          ["==", ["get", "pmap:kind"], "commercial"], "#374151",
+          "#1e293b"
         ],
-        "fill-opacity": 0.6
+        "fill-opacity": 0.7
       }
     },
+    // Natural features
     {
       "id": "natural",
-      "type": "fill",
+      "type": "fill" as const,
       "source": "protomaps",
       "source-layer": "natural",
-      "minzoom": 2,
+      "minzoom": 4,
+      "filter": ["has", "pmap:kind"],
       "paint": {
         "fill-color": [
           "case",
@@ -63,22 +75,13 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
           ["==", ["get", "pmap:kind"], "grass"], "#166534",
           "#374151"
         ],
-        "fill-opacity": 0.7
+        "fill-opacity": 0.6
       }
     },
-    {
-      "id": "water",
-      "type": "fill",
-      "source": "protomaps",
-      "source-layer": "water",
-      "paint": {
-        "fill-color": "#1e40af",
-        "fill-opacity": 0.9
-      }
-    },
+    // Country boundaries with proper filtering
     {
       "id": "boundaries-countries",
-      "type": "line",
+      "type": "line" as const,
       "source": "protomaps",
       "source-layer": "boundaries",
       "filter": ["all",
@@ -93,12 +96,13 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
           4, 1,
           8, 2
         ],
-        "line-opacity": 0.7
+        "line-opacity": 0.8
       }
     },
+    // State/province boundaries
     {
       "id": "boundaries-states",
-      "type": "line",
+      "type": "line" as const,
       "source": "protomaps",
       "source-layer": "boundaries",
       "minzoom": 4,
@@ -117,9 +121,10 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
         "line-opacity": 0.5
       }
     },
+    // Physical lines (coastlines, rivers)
     {
       "id": "physical-line",
-      "type": "line",
+      "type": "line" as const,
       "source": "protomaps",
       "source-layer": "physical_line",
       "minzoom": 6,
@@ -135,31 +140,33 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
         "line-opacity": 0.8
       }
     },
+    // Major roads
     {
       "id": "roads-major",
-      "type": "line",
+      "type": "line" as const,
       "source": "protomaps",
       "source-layer": "roads",
       "minzoom": 5,
       "filter": [
         "in",
         ["get", "pmap:kind"],
-        ["literal", ["highway", "trunk", "primary"]]
+        ["literal", ["highway", "trunk", "primary", "motorway"]]
       ],
       "paint": {
         "line-color": "#94a3b8",
         "line-width": [
           "interpolate", ["linear"], ["zoom"],
-          5, 1,
-          10, 3,
-          15, 8
+          5, 0.5,
+          10, 2,
+          15, 6
         ],
         "line-opacity": 0.8
       }
     },
+    // Minor roads
     {
       "id": "roads-minor",
-      "type": "line",
+      "type": "line" as const,
       "source": "protomaps",
       "source-layer": "roads",
       "minzoom": 8,
@@ -173,26 +180,26 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
         "line-width": [
           "interpolate", ["linear"], ["zoom"],
           8, 0.5,
-          12, 2,
-          16, 4
+          12, 1.5,
+          16, 3
         ],
         "line-opacity": 0.6
       }
     },
+    // Country labels
     {
       "id": "places-countries",
-      "type": "symbol",
+      "type": "symbol" as const,
       "source": "protomaps",
       "source-layer": "places",
       "maxzoom": 6,
       "filter": ["==", ["get", "pmap:kind"], "country"],
       "layout": {
         "text-field": ["get", "name"],
-        "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
         "text-size": [
           "interpolate", ["linear"], ["zoom"],
           2, 10,
-          6, 16
+          6, 14
         ],
         "text-anchor": "center",
         "text-transform": "uppercase",
@@ -204,25 +211,25 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
         "text-halo-width": 2
       }
     },
+    // City labels
     {
       "id": "places-cities",
-      "type": "symbol",
+      "type": "symbol" as const,
       "source": "protomaps",
       "source-layer": "places",
       "minzoom": 4,
       "filter": [
         "in",
         ["get", "pmap:kind"],
-        ["literal", ["city", "town"]]
+        ["literal", ["city", "town", "village"]]
       ],
       "layout": {
         "text-field": ["get", "name"],
-        "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
         "text-size": [
           "interpolate", ["linear"], ["zoom"],
           4, 10,
-          8, 14,
-          12, 18
+          8, 12,
+          12, 16
         ],
         "text-anchor": "center"
       },
@@ -232,24 +239,24 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
         "text-halo-width": 1.5
       }
     },
+    // Neighborhood labels
     {
       "id": "places-neighborhoods",
-      "type": "symbol",
+      "type": "symbol" as const,
       "source": "protomaps",
       "source-layer": "places",
       "minzoom": 10,
       "filter": [
         "in",
         ["get", "pmap:kind"],
-        ["literal", ["neighbourhood", "suburb", "village", "hamlet"]]
+        ["literal", ["neighbourhood", "suburb", "hamlet"]]
       ],
       "layout": {
         "text-field": ["get", "name"],
-        "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
         "text-size": [
           "interpolate", ["linear"], ["zoom"],
-          10, 10,
-          14, 12
+          10, 9,
+          14, 11
         ],
         "text-anchor": "center"
       },
