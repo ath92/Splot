@@ -68,14 +68,8 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         console.log('Map load event fired')
         setIsLoading(false)
         
-        // Set globe projection
+        // Load data after map is ready
         if (map.current) {
-          map.current.setProjection({
-            type: 'globe'
-          })
-          console.log('Globe projection set')
-          
-          // Load data after map is ready
           try {
             // Load photos
             let photosResponse
@@ -248,7 +242,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
     console.log(`Added ${photos.length} photo markers as GeoJSON features`)
 
-    // Zoom to show the first marker with globe-appropriate zoom
+    // Zoom to show the first marker
     if (photos.length > 0) {
       map.current.flyTo({
         center: [photos[0].location.longitude, photos[0].location.latitude],
