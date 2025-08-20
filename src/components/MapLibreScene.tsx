@@ -9,7 +9,7 @@ import {
 import { 
   getFlightsData
 } from '../services/flightsService'
-import { createProtomapsStyle } from '../services/mapStyleService'
+import { setupPMTilesProtocol, createDirectPMTilesStyle } from '../services/pmtilesService'
 
 interface MapLibreSceneProps {
   onPhotoClick: (photo: Photo) => void
@@ -28,20 +28,22 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight)
 
     try {
-      // Configuration for custom pmtiles - use worker endpoint instead of direct R2
-      const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://splot-photo-worker.tomhutman.workers.dev';
-      const PMTILES_URL = import.meta.env.VITE_PMTILES_URL || 
-        `${WORKER_URL}/tiles/world-tiles.json`;
+      // Setup PMTiles protocol for direct file access (protomaps.com approach)
+      setupPMTilesProtocol();
       
-      console.log('Using pmtiles TileJSON URL:', PMTILES_URL);
+      // Configuration for PMTiles - use direct file access instead of worker proxy
+      const PMTILES_FILE_URL = import.meta.env.VITE_PMTILES_FILE_URL || 
+        'https://pub-a951d20402694897ae275d1758f4675c.r2.dev/world-tiles.pmtiles';
       
-      // Try to use custom protomaps style first, fallback to demo tiles
+      console.log('Using direct PMTiles file URL:', PMTILES_FILE_URL);
+      
+      // Try to use direct PMTiles style first, fallback to demo tiles
       let mapStyle: string | object;
       try {
-        mapStyle = createProtomapsStyle(PMTILES_URL);
-        console.log('Using custom protomaps style with worker endpoint');
+        mapStyle = createDirectPMTilesStyle(PMTILES_FILE_URL);
+        console.log('Using direct PMTiles style for URL:', PMTILES_FILE_URL);
       } catch (styleError) {
-        console.warn('Failed to create custom style, falling back to demo tiles:', styleError);
+        console.warn('Failed to create direct PMTiles style, falling back to demo tiles:', styleError);
         mapStyle = 'https://demotiles.maplibre.org/style.json';
       }
       
@@ -63,8 +65,13 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         }
       }, 100)
 
-      // Add a basic layer after the map loads
-      map.current.on('load', async () => {
+      // Set up load event with fallback
+      let loadHandled = false;
+      
+      const handleMapLoad = async () => {
+        if (loadHandled) return;
+        loadHandled = true;
+        
         console.log('Map load event fired')
         setIsLoading(false)
         
@@ -139,16 +146,26 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               console.warn('Failed to load flights data:', err instanceof Error ? err.message : 'Failed to load flights')
             }
 
-
           } catch (err) {
             console.error('Error loading data:', err)
             setError(err instanceof Error ? err.message : 'Failed to load data')
           }
         }
-      })
+      };
+
+      map.current.on('load', handleMapLoad)
+
+      // Fallback: if map doesn't load in 10 seconds, try to proceed anyway
+      setTimeout(() => {
+        if (!loadHandled) {
+          console.log('Fallback: map load event did not fire, proceeding anyway')
+          handleMapLoad()
+        }
+      }, 10000)
 
       map.current.on('error', (e: maplibregl.ErrorEvent) => {
         console.error('Map error:', e)
+        console.error('Error details:', e.error)
         setError(`Map error: ${e.error?.message || 'Unknown error'}`)
         setIsLoading(false)
       })

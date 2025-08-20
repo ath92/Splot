@@ -52,27 +52,35 @@ export function setupPMTilesNetworkLogging(): () => void {
     
     if (isPMTilesRequest(urlString)) {
       // Store request info for later use in send()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (this as any).__pmtilesUrl = urlString;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (this as any).__pmtilesMethod = method;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (this as any).__pmtilesStartTime = Date.now();
       
       console.log(`[PMTiles Network] XHR request: ${method} ${urlString}`);
       
       // Add event listeners for response
       this.addEventListener('loadend', function() {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const duration = Date.now() - (this as any).__pmtilesStartTime;
         const size = this.getResponseHeader('content-length') || this.response?.length || 'unknown';
         
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         console.log(`[PMTiles Network] XHR response: ${this.status} ${this.statusText} - ${(this as any).__pmtilesUrl} (${duration}ms, ${size} bytes)`);
         
         if (this.status >= 200 && this.status < 300) {
           const contentType = this.getResponseHeader('content-type') || 'unknown';
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           console.log(`[PMTiles Network] Content-Type: ${contentType} - ${(this as any).__pmtilesUrl}`);
         }
       });
       
       this.addEventListener('error', function() {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const duration = Date.now() - (this as any).__pmtilesStartTime;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         console.error(`[PMTiles Network] XHR error - ${(this as any).__pmtilesUrl} (${duration}ms)`);
       });
     }
@@ -81,7 +89,9 @@ export function setupPMTilesNetworkLogging(): () => void {
   };
 
   XMLHttpRequest.prototype.send = function(body?: Document | XMLHttpRequestBodyInit | null) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((this as any).__pmtilesUrl) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       console.log(`[PMTiles Network] XHR sending request to ${(this as any).__pmtilesUrl}`);
     }
     return originalXHRSend.call(this, body);
