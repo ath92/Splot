@@ -8,7 +8,7 @@ import { spawn } from 'child_process';
  * Uses pmtiles CLI with maxzoom flag to properly limit zoom levels
  */
 
-const ZOOM_LIMIT = parseInt(process.env.ZOOM_LIMIT) || 8; // Conservative limit, configurable via env var
+const ZOOM_LIMIT = parseInt(process.env.ZOOM_LIMIT) || 12; // Higher limit for better detail, configurable via env var
 const OUTPUT_FILE = 'world-tiles.pmtiles';
 
 /**

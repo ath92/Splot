@@ -6,8 +6,8 @@ This directory contains scripts to generate and upload protomaps pmtiles files f
 
 The system generates world vector tiles from protomaps.com data, optimized for the Splot application:
 
-- **Size limit**: ~3GB to fit within available storage
-- **Zoom levels**: Limited to zoom 8 to control file size
+- **Size limit**: ~12GB to balance detail and storage 
+- **Zoom levels**: Limited to zoom 12 for good detail without excessive file size
 - **Format**: PMTiles for efficient serving
 - **Storage**: Cloudflare R2 bucket named "tiles"
 
@@ -66,7 +66,7 @@ The generated tiles are automatically used by the Splot map via:
 Environment variables:
 
 - `CF_WORKERS`: Cloudflare API token (required for upload)
-- `ZOOM_LIMIT`: Maximum zoom level (default: 8)
+- `ZOOM_LIMIT`: Maximum zoom level (default: 12)
 - `VITE_PMTILES_URL`: Override tile URL in frontend
 
 ## Troubleshooting
@@ -85,6 +85,8 @@ The tile generation process:
 - Reduce `ZOOM_LIMIT` in generate-tiles.js or via environment variable
 - Each zoom level approximately doubles the file size
 - Zoom level 8 typically produces ~3GB file for world coverage
+- Zoom level 10 typically produces ~12GB file for world coverage  
+- Zoom level 12 typically produces ~48GB file for world coverage
 
 ### Upload Failures
 - Verify CF_WORKERS token has R2 permissions
