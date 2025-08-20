@@ -198,7 +198,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         console.error('Map error:', e)
         console.error('Error details:', e.error)
         console.error('Error type:', e.error?.constructor?.name)
-        console.error('Error stack:', e.error?.stack)
+        console.error('Error stack:', (e.error as any)?.stack)
         
         // Check if this is a tile loading error due to network blocking
         if (e.error?.message?.includes('404') || 
@@ -215,7 +215,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       // Add source-specific error handling
       map.current.on('sourcedataloading', (e) => {
         console.log('Source data loading:', e.sourceId, e.dataType);
-        if (e.sourceId === 'protomaps' && e.dataType === 'visibility') {
+        if (e.sourceId === 'protomaps' && e.dataType === 'source') {
           tileLoadAttempted = true;
         }
       });
@@ -237,7 +237,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         if (e.dataType === 'style') {
           console.log('Style loaded');
         } else if (e.dataType === 'source') {
-          console.log('Source data event:', e.sourceId, e.isSourceLoaded);
+          console.log('Source data event:', (e as any).sourceId, (e as any).isSourceLoaded);
         }
       });
 
