@@ -2,7 +2,7 @@
  * PMTiles service for direct PMTiles file loading
  * Based on protomaps.com example approach
  */
-import { Protocol } from 'pmtiles';
+import { PMTiles, Protocol } from 'pmtiles';
 import maplibregl from 'maplibre-gl';
 
 let protocolInitialized = false;
@@ -23,27 +23,39 @@ export function setupPMTilesProtocol(): void {
 }
 
 /**
- * Create MapLibre style that uses direct PMTiles source
- * This is similar to how protomaps.com examples work
+ * Create MapLibre style that uses direct PMTiles source with comprehensive fallback
  */
 export function createDirectPMTilesStyle(pmtilesFileUrl: string) {
-  // Clean up the URL for pmtiles protocol - remove https:// prefix
-  const cleanUrl = pmtilesFileUrl.replace(/^https?:\/\//, '');
-  const pmtilesProtocolUrl = `pmtiles://${cleanUrl}`;
+  console.log('Creating direct PMTiles style with URL:', pmtilesFileUrl);
   
-  console.log('Creating direct PMTiles style with URL:', pmtilesProtocolUrl);
-  
-  return {
-    "version": 8,
-    "name": "Direct PMTiles Style",
-    "glyphs": "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
-    "sources": {
-      "protomaps": {
-        "type": "vector",
-        "url": pmtilesProtocolUrl,
-        "attribution": "© OpenStreetMap contributors, © Protomaps"
-      }
-    },
+  try {
+    // Create PMTiles instance for validation
+    const pmtiles = new PMTiles(pmtilesFileUrl);
+    
+    // The protocol URL for PMTiles should be the clean URL without https://
+    const cleanUrl = pmtilesFileUrl.replace(/^https?:\/\//, '');
+    const pmtilesProtocolUrl = `pmtiles://${cleanUrl}`;
+    
+    console.log('PMTiles instance created successfully, using protocol URL:', pmtilesProtocolUrl);
+    
+    // Test if we can get metadata from the PMTiles file
+    pmtiles.getMetadata().then(metadata => {
+      console.log('PMTiles metadata loaded:', metadata);
+    }).catch(error => {
+      console.warn('Could not load PMTiles metadata:', error);
+    });
+    
+    return {
+      "version": 8,
+      "name": "Direct PMTiles Style",
+      "glyphs": "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+      "sources": {
+        "protomaps": {
+          "type": "vector",
+          "url": pmtilesProtocolUrl,
+          "attribution": "© OpenStreetMap contributors, © Protomaps"
+        }
+      },
     "layers": [
       {
         "id": "background",
@@ -265,4 +277,47 @@ export function createDirectPMTilesStyle(pmtilesFileUrl: string) {
       }
     ]
   };
+  } catch (error) {
+    console.warn('Failed to create PMTiles instance, falling back to basic style:', error);
+    
+    // Fallback to a basic working style
+    return {
+      "version": 8,
+      "name": "Fallback Basic Style",
+      "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+      "sources": {
+        "openmaptiles": {
+          "type": "vector",
+          "url": "https://demotiles.maplibre.org/tiles/tiles.json"
+        }
+      },
+      "layers": [
+        {
+          "id": "background",
+          "type": "background",
+          "paint": {
+            "background-color": "#1e3a8a"
+          }
+        },
+        {
+          "id": "water",
+          "type": "fill",
+          "source": "openmaptiles",
+          "source-layer": "water",
+          "paint": {
+            "fill-color": "#005eaa"
+          }
+        },
+        {
+          "id": "land",
+          "type": "fill",
+          "source": "openmaptiles",
+          "source-layer": "landcover",
+          "paint": {
+            "fill-color": "#2d2d2d"
+          }
+        }
+      ]
+    };
+  }
 }
