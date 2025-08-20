@@ -31,6 +31,7 @@ export default function BasicMapLibreScene({ onPhotoClick: _ }: BasicMapLibreSce
       const mapStyle = {
         version: 8 as const,
         name: "Improved PMTiles Style",
+        glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
         sources: {
           "protomaps": {
             type: "vector" as const,

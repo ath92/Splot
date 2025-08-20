@@ -2,6 +2,7 @@
 export const createProtomapsStyle = (tileJsonUrl: string) => ({
   "version": 8 as const,
   "name": "Splot Protomaps",
+  "glyphs": "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
   "sources": {
     "protomaps": {
       "type": "vector" as const,
