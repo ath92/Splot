@@ -27,6 +27,10 @@ scripts/world-tiles.pmtiles
 scripts/node_modules/
 scripts/package-lock.json
 
+# Playwright test artifacts
+/test-results/
+/playwright-report/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

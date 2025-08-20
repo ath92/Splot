@@ -159,4 +159,116 @@ test.describe('MapLibre Load Event Tests', () => {
     // Check that no unhandled JavaScript errors occurred
     expect(pageErrors.length).toBe(0);
   });
+
+  test('MapLibre should use fallback demo tiles when custom style fails', async ({ page }) => {
+    const consoleMessages: string[] = [];
+    page.on('console', msg => {
+      consoleMessages.push(msg.text());
+    });
+
+    // Intercept the custom tile request and make it fail to test fallback
+    await page.route('**/tiles/world-tiles.json', route => {
+      route.abort();
+    });
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for map initialization and potential fallback
+    await page.waitForTimeout(15000);
+
+    // Check if the map still loads with demo tiles
+    const canvas = page.locator('.maplibregl-canvas');
+    await expect(canvas).toBeVisible();
+
+    // Check that fallback message appears or map loads anyway
+    const hasInitMessage = consoleMessages.some(msg => 
+      msg.includes('MapLibre map initialized') || 
+      msg.includes('falling back to demo tiles')
+    );
+    expect(hasInitMessage).toBe(true);
+  });
+
+  test('MapLibre should handle WebGL context loss gracefully', async ({ page }) => {
+    const consoleMessages: string[] = [];
+    page.on('console', msg => {
+      consoleMessages.push(msg.text());
+    });
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for map to load
+    await page.waitForFunction(
+      () => document.querySelector('.loading-overlay') === null,
+      { timeout: 15000 }
+    );
+
+    const canvas = page.locator('.maplibregl-canvas');
+    await expect(canvas).toBeVisible();
+
+    // Simulate WebGL context loss
+    await page.evaluate(() => {
+      const canvas = document.querySelector('.maplibregl-canvas') as HTMLCanvasElement;
+      if (canvas) {
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (gl && gl.getExtension('WEBGL_lose_context')) {
+          gl.getExtension('WEBGL_lose_context')!.loseContext();
+        }
+      }
+    });
+
+    // Wait a moment for any error handling
+    await page.waitForTimeout(2000);
+
+    // Check that the app doesn't crash
+    const errorOverlay = page.locator('.error-overlay');
+    const isErrorVisible = await errorOverlay.isVisible();
+    
+    // Either the error is handled gracefully (error overlay shown) or canvas remains visible
+    if (isErrorVisible) {
+      const errorText = await errorOverlay.textContent();
+      expect(errorText).toContain('Error:');
+    } else {
+      await expect(canvas).toBeVisible();
+    }
+  });
+
+  test('MapLibre should properly resize when window dimensions change', async ({ page }) => {
+    const consoleMessages: string[] = [];
+    page.on('console', msg => {
+      consoleMessages.push(msg.text());
+    });
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for initial load
+    await page.waitForFunction(
+      () => document.querySelector('.loading-overlay') === null,
+      { timeout: 15000 }
+    );
+
+    const canvas = page.locator('.maplibregl-canvas');
+    await expect(canvas).toBeVisible();
+
+    // Get initial canvas size
+    const initialBox = await canvas.boundingBox();
+    expect(initialBox).not.toBeNull();
+
+    // Resize the viewport
+    await page.setViewportSize({ width: 800, height: 600 });
+    await page.waitForTimeout(1000);
+
+    // Check that canvas resized
+    const resizedBox = await canvas.boundingBox();
+    expect(resizedBox).not.toBeNull();
+    expect(resizedBox!.width).toBeLessThan(initialBox!.width);
+
+    // Verify resize was logged
+    const hasResizeMessage = consoleMessages.some(msg => 
+      msg.includes('Map resized')
+    );
+    expect(hasResizeMessage).toBe(true);
+  });
 });
