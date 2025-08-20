@@ -142,6 +142,28 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
       map.current.on('load', handleMapLoad)
 
+      // Add debugging event listeners
+      map.current.on('sourcedata', (e) => {
+        console.log('Source data event:', e.sourceId, e.dataType, e.isSourceLoaded);
+      });
+
+      map.current.on('data', (e) => {
+        console.log('Data event:', e.dataType);
+      });
+
+      map.current.on('style.load', () => {
+        console.log('Style loaded successfully');
+      });
+
+      // Add a safety timeout in case the load event never fires
+      setTimeout(() => {
+        if (document.querySelector('.loading-overlay')) {
+          console.log('Safety timeout: map load event did not fire after 15 seconds, something may be wrong with tile loading')
+          setError('Map tiles failed to load from worker endpoint')
+          setIsLoading(false)
+        }
+      }, 15000)
+
       map.current.on('error', (e: maplibregl.ErrorEvent) => {
         console.error('Map error:', e)
         setError(`Map error: ${e.error?.message || 'Unknown error'}`)
