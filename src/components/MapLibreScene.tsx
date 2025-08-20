@@ -13,7 +13,6 @@ import { createProtomapsStyle } from '../services/mapStyleService'
 import { 
   registerPMTilesProtocol, 
   unregisterPMTilesProtocol,
-  createPMTilesUrl,
   isPMTilesProtocolRegistered
 } from '../services/pmtilesService'
 
@@ -46,8 +45,8 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         let mapStyle: string | object;
         let usedProtocol = 'unknown';
         
-        // First check if we can access the PMTiles file directly
-        const pmtilesDirectUrl = `${WORKER_URL}/tiles/world-tiles.pmtiles`;
+        // Use the provided PMTiles URL from R2
+        const pmtilesDirectUrl = 'https://pub-a951d20402694897ae275d1758f4675c.r2.dev/world-tiles.pmtiles';
         console.log('Checking PMTiles file availability at:', pmtilesDirectUrl);
         
         try {
@@ -56,7 +55,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
           
           if (testResponse.ok) {
             // Create PMTiles URL pointing directly to the archive
-            const pmtilesUrl = createPMTilesUrl(WORKER_URL, 'world-tiles');
+            const pmtilesUrl = `pmtiles://${pmtilesDirectUrl}`;
             console.log('PMTiles file found, using protocol URL:', pmtilesUrl);
             
             mapStyle = createProtomapsStyle(pmtilesUrl, true);
