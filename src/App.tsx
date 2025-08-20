@@ -1,12 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import MapLibreScene from './components/MapLibreScene'
 import PhotoOverlay from './components/PhotoOverlay'
 import DebugConsole from './components/DebugConsole'
 import { type Photo } from './services/photoService'
 import { shouldShowDebugConsole } from './utils/debugUtils'
+import { setupPMTilesNetworkLogging } from './utils/networkMonitor'
 
 function App() {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null)
+  const isDebugMode = shouldShowDebugConsole()
+  
+  // Setup network monitoring for PMTiles when in debug mode
+  useEffect(() => {
+    if (!isDebugMode) return
+    
+    console.log('[Debug] Setting up PMTiles network monitoring...')
+    const cleanup = setupPMTilesNetworkLogging()
+    
+    return cleanup
+  }, [isDebugMode])
 
   const handlePhotoClick = (photo: Photo) => {
     setSelectedPhoto(photo)
@@ -18,7 +30,7 @@ function App() {
 
   return (
     <div className="canvas-container">
-      <DebugConsole isVisible={shouldShowDebugConsole()} />
+      <DebugConsole isVisible={isDebugMode} />
       
       <MapLibreScene onPhotoClick={handlePhotoClick} />
       
