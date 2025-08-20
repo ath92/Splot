@@ -10,6 +10,11 @@ import {
   getFlightsData
 } from '../services/flightsService'
 import { createProtomapsStyle } from '../services/mapStyleService'
+import { 
+  registerPMTilesProtocol, 
+  unregisterPMTilesProtocol,
+  isPMTilesProtocolRegistered
+} from '../services/pmtilesService'
 
 interface MapLibreSceneProps {
   onPhotoClick: (photo: Photo) => void
@@ -27,140 +32,186 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     console.log('Initializing MapLibre map, container:', mapContainer.current)
     console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight)
 
-    try {
-      // Configuration for custom pmtiles - use worker endpoint instead of direct R2
-      const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://splot-photo-worker.tomhutman.workers.dev';
-      const PMTILES_URL = import.meta.env.VITE_PMTILES_URL || 
-        `${WORKER_URL}/tiles/world-tiles.json`;
-      
-      console.log('Using pmtiles TileJSON URL:', PMTILES_URL);
-      
-      // Try to use custom protomaps style first, fallback to demo tiles
-      let mapStyle: string | object;
+    const initializeMap = async () => {
       try {
-        mapStyle = createProtomapsStyle(PMTILES_URL);
-        console.log('Using custom protomaps style with worker endpoint');
-      } catch (styleError) {
-        console.warn('Failed to create custom style, falling back to demo tiles:', styleError);
-        mapStyle = 'https://demotiles.maplibre.org/style.json';
-      }
-      
-      // Initialize MapLibre map
-      map.current = new maplibregl.Map({
-        container: mapContainer.current,
-        style: mapStyle as string | maplibregl.StyleSpecification,
-        center: [0, 0],
-        zoom: 1
-      })
-
-      console.log('MapLibre map initialized:', map.current)
-
-      // Force the map to render by triggering a resize
-      setTimeout(() => {
-        if (map.current) {
-          map.current.resize()
-          console.log('Map resized')
-        }
-      }, 100)
-
-      // Add a basic layer after the map loads
-      map.current.on('load', async () => {
-        console.log('Map load event fired')
-        setIsLoading(false)
+        // Configuration for custom pmtiles
+        const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://splot-photo-worker.tomhutman.workers.dev';
         
-        // Set globe projection
-        if (map.current) {
-          map.current.setProjection({
-            type: 'globe'
-          })
-          console.log('Globe projection set')
+        // Register PMTiles protocol first
+        registerPMTilesProtocol();
+        console.log('PMTiles protocol registered');
+        
+        // Try PMTiles protocol approach first, fallback to TileJSON
+        let mapStyle: string | object;
+        let usedProtocol = 'unknown';
+        
+        // Use the provided PMTiles URL from R2
+        const pmtilesDirectUrl = 'https://pub-a951d20402694897ae275d1758f4675c.r2.dev/world-tiles.pmtiles';
+        console.log('Checking PMTiles file availability at:', pmtilesDirectUrl);
+        
+        try {
+          // Test if PMTiles file is accessible
+          const testResponse = await fetch(pmtilesDirectUrl, { method: 'HEAD' });
           
-          // Load data after map is ready
+          if (testResponse.ok) {
+            // Create PMTiles URL pointing directly to the archive
+            const pmtilesUrl = `pmtiles://${pmtilesDirectUrl}`;
+            console.log('PMTiles file found, using protocol URL:', pmtilesUrl);
+            
+            mapStyle = createProtomapsStyle(pmtilesUrl, true);
+            usedProtocol = 'pmtiles';
+            console.log('Using PMTiles protocol approach');
+          } else {
+            throw new Error(`PMTiles file not accessible: ${testResponse.status}`);
+          }
+        } catch (pmtilesError) {
+          console.warn('PMTiles protocol failed, falling back to TileJSON:', pmtilesError);
+          
           try {
-            // Load photos
-            let photosResponse
-            try {
-              photosResponse = await fetchPhotos()
-            } catch {
-              console.log('API not available, using fallback mock data for development')
-              // Create minimal fallback data for development
-              photosResponse = {
-                photos: [
-                  {
-                    filename: 'test-photo-1.jpg',
-                    url: 'https://picsum.photos/800/600?random=1',
-                    location: { latitude: 40.7128, longitude: -74.0060, altitude: 10 },
-                    uploadedAt: '2024-01-01T12:00:00Z',
-                    fileSize: 1024000,
-                    originalName: 'New York City.jpg',
-                    cameraMake: 'Canon',
-                    cameraModel: 'EOS R5',
-                    dateTime: '2024-01-01T12:00:00Z'
-                  },
-                  {
-                    filename: 'test-photo-2.jpg',
-                    url: 'https://picsum.photos/800/600?random=2',
-                    location: { latitude: 51.5074, longitude: -0.1278, altitude: 11 },
-                    uploadedAt: '2024-01-02T12:00:00Z',
-                    fileSize: 1536000,
-                    originalName: 'London.jpg',
-                    cameraMake: 'Sony',
-                    cameraModel: 'A7R IV',
-                    dateTime: '2024-01-02T12:00:00Z'
-                  },
-                  {
-                    filename: 'test-photo-3.jpg',
-                    url: 'https://picsum.photos/800/600?random=3',
-                    location: { latitude: 35.6762, longitude: 139.6503, altitude: 40 },
-                    uploadedAt: '2024-01-03T12:00:00Z',
-                    fileSize: 2048000,
-                    originalName: 'Tokyo.jpg',
-                    cameraMake: 'Nikon',
-                    cameraModel: 'D850',
-                    dateTime: '2024-01-03T12:00:00Z'
-                  }
-                ],
-                count: 3
-              }
-            }
-
-            // Add photo markers
-            if (photosResponse.photos.length > 0) {
-              addPhotoMarkers(photosResponse.photos)
-              console.log(`Loaded ${photosResponse.count} photos with GPS data`)
-            }
-
-            // Load flights data
-            try {
-              const flightsData = getFlightsData()
-              addFlightPaths(flightsData)
-              console.log(`Loaded flight routes`)
-            } catch (err) {
-              console.warn('Failed to load flights data:', err instanceof Error ? err.message : 'Failed to load flights')
-            }
-
-
-          } catch (err) {
-            console.error('Error loading data:', err)
-            setError(err instanceof Error ? err.message : 'Failed to load data')
+            // Fallback to TileJSON approach
+            const PMTILES_URL = `${WORKER_URL}/tiles/world-tiles.json`;
+            console.log('Using fallback TileJSON URL:', PMTILES_URL);
+            
+            mapStyle = createProtomapsStyle(PMTILES_URL, false);
+            usedProtocol = 'tilejson';
+            console.log('Using TileJSON fallback approach');
+          } catch (tileJsonError) {
+            console.warn('TileJSON approach also failed, using demo tiles:', tileJsonError);
+            mapStyle = 'https://demotiles.maplibre.org/style.json';
+            usedProtocol = 'demo';
           }
         }
-      })
+      
+        // Initialize MapLibre map
+        if (!mapContainer.current) {
+          throw new Error('Map container not available');
+        }
+        
+        map.current = new maplibregl.Map({
+          container: mapContainer.current,
+          style: mapStyle as string | maplibregl.StyleSpecification,
+          center: [0, 0],
+          zoom: 1
+        })
 
-      map.current.on('error', (e: maplibregl.ErrorEvent) => {
-        console.error('Map error:', e)
-        setError(`Map error: ${e.error?.message || 'Unknown error'}`)
+        console.log(`MapLibre map initialized using ${usedProtocol} protocol:`, map.current)
+
+        // Force the map to render by triggering a resize
+        setTimeout(() => {
+          if (map.current) {
+            map.current.resize()
+            console.log('Map resized')
+          }
+        }, 100)
+
+        // Add a basic layer after the map loads
+        map.current.on('load', async () => {
+          console.log('Map load event fired')
+          setIsLoading(false)
+          
+          // Set globe projection
+          if (map.current) {
+            map.current.setProjection({
+              type: 'globe'
+            })
+            console.log('Globe projection set')
+            
+            // Load data after map is ready
+            try {
+              // Load photos
+              let photosResponse
+              try {
+                photosResponse = await fetchPhotos()
+              } catch {
+                console.log('API not available, using fallback mock data for development')
+                // Create minimal fallback data for development
+                photosResponse = {
+                  photos: [
+                    {
+                      filename: 'test-photo-1.jpg',
+                      url: 'https://picsum.photos/800/600?random=1',
+                      location: { latitude: 40.7128, longitude: -74.0060, altitude: 10 },
+                      uploadedAt: '2024-01-01T12:00:00Z',
+                      fileSize: 1024000,
+                      originalName: 'New York City.jpg',
+                      cameraMake: 'Canon',
+                      cameraModel: 'EOS R5',
+                      dateTime: '2024-01-01T12:00:00Z'
+                    },
+                    {
+                      filename: 'test-photo-2.jpg',
+                      url: 'https://picsum.photos/800/600?random=2',
+                      location: { latitude: 51.5074, longitude: -0.1278, altitude: 11 },
+                      uploadedAt: '2024-01-02T12:00:00Z',
+                      fileSize: 1536000,
+                      originalName: 'London.jpg',
+                      cameraMake: 'Sony',
+                      cameraModel: 'A7R IV',
+                      dateTime: '2024-01-02T12:00:00Z'
+                    },
+                    {
+                      filename: 'test-photo-3.jpg',
+                      url: 'https://picsum.photos/800/600?random=3',
+                      location: { latitude: 35.6762, longitude: 139.6503, altitude: 40 },
+                      uploadedAt: '2024-01-03T12:00:00Z',
+                      fileSize: 2048000,
+                      originalName: 'Tokyo.jpg',
+                      cameraMake: 'Nikon',
+                      cameraModel: 'D850',
+                      dateTime: '2024-01-03T12:00:00Z'
+                    }
+                  ],
+                  count: 3
+                }
+              }
+
+              // Add photo markers
+              if (photosResponse.photos.length > 0) {
+                addPhotoMarkers(photosResponse.photos)
+                console.log(`Loaded ${photosResponse.count} photos with GPS data`)
+              }
+
+              // Load flights data
+              try {
+                const flightsData = getFlightsData()
+                addFlightPaths(flightsData)
+                console.log(`Loaded flight routes`)
+              } catch (err) {
+                console.warn('Failed to load flights data:', err instanceof Error ? err.message : 'Failed to load flights')
+              }
+
+
+            } catch (err) {
+              console.error('Error loading data:', err)
+              setError(err instanceof Error ? err.message : 'Failed to load data')
+            }
+          }
+        })
+
+        map.current.on('error', (e: maplibregl.ErrorEvent) => {
+          console.error('Map error:', e)
+          setError(`Map error: ${e.error?.message || 'Unknown error'}`)
+          setIsLoading(false)
+        })
+
+      } catch (err) {
+        console.error('Failed to initialize MapLibre:', err)
+        setError(err instanceof Error ? err.message : 'Failed to initialize map')
         setIsLoading(false)
-      })
+      }
+    };
 
-    } catch (err) {
-      console.error('Failed to initialize MapLibre:', err)
-      setError(err instanceof Error ? err.message : 'Failed to initialize map')
-      setIsLoading(false)
-    }
+    // Call the async initialization
+    initializeMap();
 
     return () => {
+      // Clean up map and protocol
       map.current?.remove();
+      
+      // Unregister PMTiles protocol if we registered it
+      if (isPMTilesProtocolRegistered()) {
+        unregisterPMTilesProtocol();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // loadData is intentionally not in dependencies to avoid recreation

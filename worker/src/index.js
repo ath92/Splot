@@ -32,6 +32,45 @@ app.get('/tiles/:name.json', async (c) => {
   return handlePMTilesRequest(c.req.raw, c.env, c.executionCtx);
 });
 
+// Serve raw PMTiles archive files for direct access
+app.get('/tiles/:name.pmtiles', async (c) => {
+  try {
+    const env = c.env;
+    const name = c.req.param('name');
+    
+    if (!env.TILES) {
+      return c.json({ error: "PMTiles storage not configured" }, 500);
+    }
+
+    // Get the PMTiles archive from R2
+    const object = await env.TILES.get(`${name}.pmtiles`);
+    
+    if (!object) {
+      return c.json({ error: "PMTiles archive not found" }, 404);
+    }
+
+    // Return with appropriate headers for PMTiles
+    return new Response(object.body, {
+      headers: {
+        "Content-Type": "application/octet-stream",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Range",
+        "Vary": "Origin",
+        "Cache-Control": "public, max-age=86400",
+        // Support range requests for PMTiles
+        "Accept-Ranges": "bytes"
+      }
+    });
+  } catch (error) {
+    console.error("PMTiles archive serve error:", error);
+    return c.json({ 
+      error: "Failed to serve PMTiles archive", 
+      details: error.message 
+    }, 500);
+  }
+});
+
 export default app;
 
 function serveUploadForm() {

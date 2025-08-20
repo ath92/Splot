@@ -1,16 +1,26 @@
 // Custom MapLibre style for protomaps pmtiles
-export const createProtomapsStyle = (tileJsonUrl: string) => ({
-  "version": 8,
-  "name": "Splot Protomaps",
-  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
-  "sources": {
-    "protomaps": {
-      "type": "vector",
-      "url": tileJsonUrl,
-      "attribution": "© OpenStreetMap contributors, © Protomaps"
-    }
-  },
-  "layers": [
+export const createProtomapsStyle = (sourceUrl: string, usePMTilesProtocol = false) => {
+  // Create source configuration based on protocol type
+  const protomapsSource = usePMTilesProtocol 
+    ? {
+        "type": "vector" as const,
+        "url": sourceUrl, // PMTiles protocol URL
+        "attribution": "© OpenStreetMap contributors, © Protomaps"
+      }
+    : {
+        "type": "vector" as const,
+        "url": sourceUrl, // TileJSON URL
+        "attribution": "© OpenStreetMap contributors, © Protomaps"
+      }
+
+  return {
+    "version": 8,
+    "name": "Splot Protomaps",
+    "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+    "sources": {
+      "protomaps": protomapsSource
+    },
+    "layers": [
     {
       "id": "background",
       "type": "background",
@@ -93,4 +103,5 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
       }
     }
   ]
-});
+  }
+};
