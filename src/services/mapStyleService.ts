@@ -71,7 +71,7 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
       "minzoom": 6,
       "paint": {
         "line-color": "#718096",
-        "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.5, 12, 2]
+        "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.5, 12, 2, 15, 4]
       }
     },
     {
@@ -83,11 +83,41 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
       "layout": {
         "text-field": "{name}",
         "text-font": ["sans-serif"],
-        "text-size": ["interpolate", ["linear"], ["zoom"], 4, 10, 8, 14],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 4, 10, 8, 14, 12, 18],
         "text-anchor": "center"
       },
       "paint": {
         "text-color": "#e2e8f0",
+        "text-halo-color": "#1a202c",
+        "text-halo-width": 1
+      }
+    },
+    {
+      "id": "buildings",
+      "type": "fill",
+      "source": "protomaps",
+      "source-layer": "buildings",
+      "minzoom": 11,
+      "paint": {
+        "fill-color": "#3a3a3a",
+        "fill-opacity": 0.7
+      }
+    },
+    {
+      "id": "water_labels", 
+      "type": "symbol",
+      "source": "protomaps",
+      "source-layer": "water",
+      "minzoom": 8,
+      "filter": ["has", "name"],
+      "layout": {
+        "text-field": "{name}",
+        "text-font": ["sans-serif"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 8, 11, 12, 15],
+        "text-anchor": "center"
+      },
+      "paint": {
+        "text-color": "#6bb6ff",
         "text-halo-color": "#1a202c",
         "text-halo-width": 1
       }
