@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import MapLibreScene from './components/MapLibreScene'
+import BasicMapLibreScene from './components/BasicMapLibreScene'
 import PhotoOverlay from './components/PhotoOverlay'
 import DebugConsole from './components/DebugConsole'
 import { type Photo } from './services/photoService'
@@ -32,7 +32,7 @@ function App() {
     <div className="canvas-container">
       <DebugConsole isVisible={isDebugMode} />
       
-      <MapLibreScene onPhotoClick={handlePhotoClick} />
+      <BasicMapLibreScene onPhotoClick={handlePhotoClick} />
       
       <PhotoOverlay 
         photo={selectedPhoto} 
