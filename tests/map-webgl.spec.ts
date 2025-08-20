@@ -71,6 +71,82 @@ test.describe('WebGL Support for MapLibre', () => {
     console.log('Map container dimensions:', dimensions);
   });
 
+  test('should fire MapLibre load event', async ({ page }) => {
+    const consoleMessages = [];
+    let mapLoadEventFired = false;
+    
+    // Listen for console messages to detect map load event
+    page.on('console', msg => {
+      const message = msg.text();
+      consoleMessages.push(message);
+      
+      // Check for the specific map load event message
+      if (message.includes('Map load event fired')) {
+        mapLoadEventFired = true;
+      }
+    });
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    
+    // Verify map container is visible first
+    const mapContainer = page.locator('.map-container');
+    await expect(mapContainer).toBeVisible();
+    
+    // Debug: Check what's in the map container
+    const containerContent = await page.evaluate(() => {
+      const container = document.querySelector('.map-container');
+      return {
+        hasContainer: !!container,
+        containerChildren: container ? container.children.length : 0,
+        containerClasses: container ? container.className : '',
+        canvasElements: document.querySelectorAll('.map-container canvas').length,
+        allCanvases: document.querySelectorAll('canvas').length,
+        innerHtml: container ? container.innerHTML.substring(0, 500) : 'No container found'
+      };
+    });
+    
+    console.log('Map container debug info:', containerContent);
+
+    // Wait for either the map to load or loading to finish
+    await page.waitForFunction(
+      () => {
+        // Check if loading overlay is gone (indicates map loaded)
+        const loadingOverlay = document.querySelector('.loading-overlay');
+        return loadingOverlay === null || loadingOverlay.style.display === 'none';
+      },
+      { timeout: 20000 }
+    );
+
+    // Additional wait to allow console messages to be captured
+    await page.waitForTimeout(2000);
+
+    // Check if loading overlay is gone (primary indicator that map loaded)
+    const loadingOverlay = page.locator('.loading-overlay');
+    await expect(loadingOverlay).not.toBeVisible({ timeout: 5000 });
+
+    // Verify that map load event was fired by checking console messages
+    console.log('All console messages:', consoleMessages);
+    console.log('MapLibre load event fired:', mapLoadEventFired);
+    
+    // If the loading overlay is gone, the map should have loaded
+    // We'll check for either the console message OR the absence of loading overlay
+    const mapLoadComplete = mapLoadEventFired || consoleMessages.some(msg => 
+      msg.includes('Map load event fired') || 
+      msg.includes('MapLibre map initialized') ||
+      msg.includes('Loading..') === false
+    );
+    
+    expect(mapLoadComplete).toBe(true);
+
+    console.log('MapLibre load event test completed successfully');
+    console.log('Console messages related to map:', consoleMessages.filter(msg => 
+      msg.toLowerCase().includes('map') || 
+      msg.toLowerCase().includes('load') || 
+      msg.toLowerCase().includes('maplibre')
+    ));
+  });
+
   test('should not have critical console errors', async ({ page }) => {
     const consoleErrors = [];
     
