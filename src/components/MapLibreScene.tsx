@@ -84,6 +84,10 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         }
       
         // Initialize MapLibre map
+        if (!mapContainer.current) {
+          throw new Error('Map container not available');
+        }
+        
         map.current = new maplibregl.Map({
           container: mapContainer.current,
           style: mapStyle as string | maplibregl.StyleSpecification,
