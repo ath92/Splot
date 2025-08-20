@@ -170,14 +170,6 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         setIsLoading(false)
       })
 
-      // Force set loading to false after a timeout if nothing happens
-      setTimeout(() => {
-        if (isLoading) {
-          console.log('Timeout reached, forcing loading to false')
-          setIsLoading(false)
-        }
-      }, 5000)
-
     } catch (err) {
       console.error('Failed to initialize MapLibre:', err)
       setError(err instanceof Error ? err.message : 'Failed to initialize map')
