@@ -31,10 +31,9 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       // Configuration for custom pmtiles - use worker endpoint instead of direct R2
       const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://splot-photo-worker.tomhutman.workers.dev';
       const PMTILES_URL = import.meta.env.VITE_PMTILES_URL || 
-        `https://ath92.github.io/Splot/simple-map/world-tiles-simple.pmtiles`;
+        `${WORKER_URL}/tiles/world-tiles.json`;
       
-      console.log('Using pmtiles TileJSON URL:', WORKER_URL, PMTILES_URL);
-      
+      console.log('Using pmtiles TileJSON URL:', PMTILES_URL);
       // Try to use custom protomaps style first, fallback to demo tiles
       let mapStyle: string | object;
       try {
