@@ -2,7 +2,7 @@
 
 A web app for displaying a set of pictures on an interactive map based on their geolocation metadata. The pictures will be retrieved from a bucket somewhere.
 
-## Features
+## Features. 
 
 - **Full-screen map canvas** - Immersive experience that fills the entire viewport
 - **Mobile-optimized controls** - Touch-friendly pan, zoom, and rotation controls
