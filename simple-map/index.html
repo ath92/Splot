@@ -8,14 +8,139 @@
         <style>
             body {
                 margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                    sans-serif;
             }
             #map {
                 height:100%; width:100%;
+            }
+            
+            /* Photo Overlay Styles */
+            .photo-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.8);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+            
+            .photo-overlay.show {
+                display: flex;
+            }
+            
+            .photo-overlay-content {
+                position: relative;
+                max-width: 90vw;
+                max-height: 90vh;
+                background-color: #1a1a1a;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            }
+            
+            .photo-overlay-close {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+                cursor: pointer;
+                z-index: 1001;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background-color 0.3s ease;
+            }
+            
+            .photo-overlay-close:hover {
+                background: rgba(0, 0, 0, 0.9);
+            }
+            
+            .photo-overlay-image {
+                width: 100%;
+                height: auto;
+                max-height: calc(90vh - 100px);
+                object-fit: contain;
+                display: block;
+            }
+            
+            .photo-overlay-info {
+                padding: 15px 20px;
+                color: #e0e0e0;
+                background-color: #1a1a1a;
+            }
+            
+            .photo-overlay-info h3 {
+                margin: 0 0 10px 0;
+                font-size: 18px;
+                font-weight: 600;
+                color: #ffffff;
+            }
+            
+            .photo-overlay-info p {
+                margin: 5px 0;
+                font-size: 14px;
+                color: #b0b0b0;
+            }
+            
+            /* Mobile optimizations for overlay */
+            @media (max-width: 768px) {
+                .photo-overlay {
+                    padding: 10px;
+                }
+                
+                .photo-overlay-content {
+                    max-width: 95vw;
+                    max-height: 95vh;
+                }
+                
+                .photo-overlay-image {
+                    max-height: calc(95vh - 80px);
+                }
+                
+                .photo-overlay-info {
+                    padding: 12px 15px;
+                }
+                
+                .photo-overlay-info h3 {
+                    font-size: 16px;
+                }
+                
+                .photo-overlay-info p {
+                    font-size: 13px;
+                }
             }
         </style>
     </head>
     <body>
         <div id="map"></div>
+        
+        <!-- Photo Overlay -->
+        <div id="photo-overlay" class="photo-overlay">
+            <div class="photo-overlay-content">
+                <button class="photo-overlay-close" onclick="closePhotoOverlay()">×</button>
+                <img id="photo-overlay-image" class="photo-overlay-image" src="" alt="" />
+                <div class="photo-overlay-info">
+                    <h3 id="photo-overlay-title"></h3>
+                    <p id="photo-overlay-camera"></p>
+                    <p id="photo-overlay-date"></p>
+                    <p id="photo-overlay-location"></p>
+                </div>
+            </div>
+        </div>
         <script type="text/javascript">
             // add the PMTiles plugin to the maplibregl global.
             // setting metadata = true fills out the "attribution" field of the source, and is required for some inspector applications,
@@ -83,7 +208,314 @@
             map.on("load", () => {
                 map.setProjection({
                     type: 'globe'
-                })
+                });
+                
+                // Add photos and flight paths after map loads
+                addPhotoMarkers(map);
+                addFlightPaths(map);
+            });
+            
+            // Fallback: add photos and flight paths after a timeout even if load event doesn't fire
+            setTimeout(() => {
+                console.log('Timeout fallback: adding photos and flights');
+                addPhotoMarkers(map);
+                addFlightPaths(map);
+            }, 3000);
+            
+            // Sample photo data (fallback for development)
+            const samplePhotos = [
+                {
+                    filename: 'test-photo-1.jpg',
+                    url: 'https://picsum.photos/800/600?random=1',
+                    location: { latitude: 40.7128, longitude: -74.0060, altitude: 10 },
+                    uploadedAt: '2024-01-01T12:00:00Z',
+                    fileSize: 1024000,
+                    originalName: 'New York City.jpg',
+                    cameraMake: 'Canon',
+                    cameraModel: 'EOS R5',
+                    dateTime: '2024-01-01T12:00:00Z'
+                },
+                {
+                    filename: 'test-photo-2.jpg',
+                    url: 'https://picsum.photos/800/600?random=2',
+                    location: { latitude: 51.5074, longitude: -0.1278, altitude: 11 },
+                    uploadedAt: '2024-01-02T12:00:00Z',
+                    fileSize: 1536000,
+                    originalName: 'London.jpg',
+                    cameraMake: 'Sony',
+                    cameraModel: 'A7R IV',
+                    dateTime: '2024-01-02T12:00:00Z'
+                },
+                {
+                    filename: 'test-photo-3.jpg',
+                    url: 'https://picsum.photos/800/600?random=3',
+                    location: { latitude: 35.6762, longitude: 139.6503, altitude: 40 },
+                    uploadedAt: '2024-01-03T12:00:00Z',
+                    fileSize: 2048000,
+                    originalName: 'Tokyo.jpg',
+                    cameraMake: 'Nikon',
+                    cameraModel: 'D850',
+                    dateTime: '2024-01-03T12:00:00Z'
+                }
+            ];
+            
+            // Flight data
+            const flightsData = {
+                "airports": {
+                    "AMS": {"code": "AMS", "name": "Amsterdam Airport Schiphol", "city": "Amsterdam", "country": "Netherlands", "latitude": 52.3105, "longitude": 4.7683},
+                    "XMN": {"code": "XMN", "name": "Xiamen Gaoqi International Airport", "city": "Xiamen", "country": "China", "latitude": 24.5440, "longitude": 118.1281},
+                    "KWL": {"code": "KWL", "name": "Guilin Liangjiang International Airport", "city": "Guilin", "country": "China", "latitude": 25.2181, "longitude": 110.0394},
+                    "DYG": {"code": "DYG", "name": "Zhangjiajie Hehua Airport", "city": "Zhangjiajie", "country": "China", "latitude": 29.1028, "longitude": 110.4436},
+                    "XIY": {"code": "XIY", "name": "Xi'an Xianyang International Airport", "city": "Xi'an", "country": "China", "latitude": 34.4472, "longitude": 108.7539},
+                    "PVG": {"code": "PVG", "name": "Shanghai Pudong International Airport", "city": "Shanghai", "country": "China", "latitude": 31.1443, "longitude": 121.8083},
+                    "ICN": {"code": "ICN", "name": "Incheon International Airport", "city": "Seoul", "country": "South Korea", "latitude": 37.4602, "longitude": 126.4407},
+                    "PUS": {"code": "PUS", "name": "Gimhae International Airport", "city": "Busan", "country": "South Korea", "latitude": 35.1795, "longitude": 128.9382},
+                    "TPE": {"code": "TPE", "name": "Taiwan Taoyuan International Airport", "city": "Taipei", "country": "Taiwan", "latitude": 25.0777, "longitude": 121.2328},
+                    "RMQ": {"code": "RMQ", "name": "Taichung Airport", "city": "Taichung", "country": "Taiwan", "latitude": 24.2647, "longitude": 120.6206},
+                    "HAN": {"code": "HAN", "name": "Noi Bai International Airport", "city": "Hanoi", "country": "Vietnam", "latitude": 21.2212, "longitude": 105.8067},
+                    "DAD": {"code": "DAD", "name": "Da Nang International Airport", "city": "Da Nang", "country": "Vietnam", "latitude": 16.0439, "longitude": 108.1994},
+                    "KUL": {"code": "KUL", "name": "Kuala Lumpur International Airport", "city": "Kuala Lumpur", "country": "Malaysia", "latitude": 2.7456, "longitude": 101.7072},
+                    "KBR": {"code": "KBR", "name": "Sultan Ismail Petra Airport", "city": "Kota Bharu", "country": "Malaysia", "latitude": 6.1664, "longitude": 102.2931},
+                    "PEN": {"code": "PEN", "name": "Penang International Airport", "city": "Penang", "country": "Malaysia", "latitude": 5.2971, "longitude": 100.2770},
+                    "BKI": {"code": "BKI", "name": "Kota Kinabalu International Airport", "city": "Kota Kinabalu", "country": "Malaysia", "latitude": 5.9372, "longitude": 116.0515},
+                    "SDK": {"code": "SDK", "name": "Sandakan Airport", "city": "Sandakan", "country": "Malaysia", "latitude": 5.9009, "longitude": 118.0595},
+                    "LOP": {"code": "LOP", "name": "Lombok International Airport", "city": "Lombok", "country": "Indonesia", "latitude": -8.7567, "longitude": 116.2266},
+                    "ENE": {"code": "ENE", "name": "Ende Airport", "city": "Flores", "country": "Indonesia", "latitude": -8.8492, "longitude": 121.6611},
+                    "CGK": {"code": "CGK", "name": "Soekarno-Hatta International Airport", "city": "Jakarta", "country": "Indonesia", "latitude": -6.1256, "longitude": 106.6559},
+                    "SIN": {"code": "SIN", "name": "Singapore Changi Airport", "city": "Singapore", "country": "Singapore", "latitude": 1.3644, "longitude": 103.9915},
+                    "CAN": {"code": "CAN", "name": "Guangzhou Baiyun International Airport", "city": "Guangzhou", "country": "China", "latitude": 23.3924, "longitude": 113.2988},
+                    "LGW": {"code": "LGW", "name": "London Gatwick Airport", "city": "London", "country": "United Kingdom", "latitude": 51.1481, "longitude": -0.1903},
+                    "LTN": {"code": "LTN", "name": "London Luton Airport", "city": "London", "country": "United Kingdom", "latitude": 51.8747, "longitude": -0.3683}
+                },
+                "flights": [
+                    {"id": 1, "from": "AMS", "to": "XMN", "route": "Amsterdam - Xiamen"},
+                    {"id": 2, "from": "XMN", "to": "KWL", "route": "Xiamen - Guilin"},
+                    {"id": 3, "from": "DYG", "to": "XIY", "route": "Zhangjiajie - Xi'an"},
+                    {"id": 4, "from": "PVG", "to": "ICN", "route": "Shanghai - Seoul"},
+                    {"id": 5, "from": "PUS", "to": "TPE", "route": "Busan - Taipei"},
+                    {"id": 6, "from": "RMQ", "to": "HAN", "route": "Taichung - Hanoi"},
+                    {"id": 7, "from": "HAN", "to": "DAD", "route": "Hanoi - Da Nang"},
+                    {"id": 8, "from": "DAD", "to": "KUL", "route": "Da Nang - Kuala Lumpur"},
+                    {"id": 9, "from": "KUL", "to": "KBR", "route": "Kuala Lumpur - Kota Bharu"},
+                    {"id": 10, "from": "PEN", "to": "BKI", "route": "Penang - Kota Kinabalu"},
+                    {"id": 11, "from": "BKI", "to": "SDK", "route": "Kota Kinabalu - Sandakan"},
+                    {"id": 12, "from": "SDK", "to": "KUL", "route": "Sandakan - Kuala Lumpur"},
+                    {"id": 13, "from": "KUL", "to": "LOP", "route": "Kuala Lumpur - Lombok"},
+                    {"id": 14, "from": "ENE", "to": "CGK", "route": "Flores - Jakarta"},
+                    {"id": 15, "from": "CGK", "to": "SIN", "route": "Jakarta - Singapore"},
+                    {"id": 16, "from": "SIN", "to": "CAN", "route": "Singapore - Guangzhou"},
+                    {"id": 17, "from": "CAN", "to": "LGW", "route": "Guangzhou - London Gatwick"},
+                    {"id": 18, "from": "LTN", "to": "AMS", "route": "London Luton - Amsterdam"}
+                ]
+            };
+            
+            // Add photo markers to the map
+            function addPhotoMarkers(map) {
+                console.log('Adding photo markers:', samplePhotos.length);
+                
+                // Check if source already exists to prevent "source already exists" error
+                if (map.getSource('photos')) {
+                    console.log('Photos source already exists, skipping addition');
+                    return;
+                }
+                
+                const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'];
+                
+                // Create GeoJSON source for photo markers
+                const photoFeatures = samplePhotos.map((photo, index) => ({
+                    type: 'Feature',
+                    properties: {
+                        photo: JSON.stringify(photo), // Store photo data for click handling
+                        color: colors[index % 5],
+                        index: index
+                    },
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [photo.location.longitude, photo.location.latitude]
+                    }
+                }));
+                
+                // Add source for photo markers
+                map.addSource('photos', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: photoFeatures
+                    }
+                });
+                
+                // Add layer for photo markers
+                if (!map.getLayer('photos')) {
+                    map.addLayer({
+                        id: 'photos',
+                        type: 'circle',
+                        source: 'photos',
+                        paint: {
+                            'circle-radius': 12,
+                            'circle-color': ['get', 'color'],
+                            'circle-stroke-width': 3,
+                            'circle-stroke-color': '#ffffff',
+                            'circle-opacity': 0.9
+                        }
+                    });
+                }
+                
+                // Add click handler for photo markers
+                map.on('click', 'photos', function(e) {
+                    if (e.features && e.features.length > 0) {
+                        const feature = e.features[0];
+                        if (feature.properties && feature.properties.photo) {
+                            try {
+                                const photo = JSON.parse(feature.properties.photo);
+                                console.log('Photo marker clicked:', photo.originalName);
+                                showPhotoOverlay(photo);
+                            } catch (err) {
+                                console.error('Error parsing photo data:', err);
+                            }
+                        }
+                    }
+                });
+                
+                // Change cursor to pointer when hovering over markers
+                map.on('mouseenter', 'photos', function() {
+                    map.getCanvas().style.cursor = 'pointer';
+                });
+                
+                map.on('mouseleave', 'photos', function() {
+                    map.getCanvas().style.cursor = '';
+                });
+                
+                console.log('Added ' + samplePhotos.length + ' photo markers as GeoJSON features');
+                
+                // Zoom to show the first marker with globe-appropriate zoom
+                if (samplePhotos.length > 0) {
+                    map.flyTo({
+                        center: [samplePhotos[0].location.longitude, samplePhotos[0].location.latitude],
+                        zoom: 3,
+                        duration: 2000
+                    });
+                }
+            }
+            
+            // Add flight paths to the map
+            function addFlightPaths(map) {
+                console.log('Adding flight paths');
+                
+                // Check if source already exists to prevent "source already exists" error
+                if (map.getSource('flights')) {
+                    console.log('Flights source already exists, skipping addition');
+                    return;
+                }
+                
+                const airports = flightsData.airports;
+                const flights = flightsData.flights;
+                const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9f43', '#ee5a6f', '#00d2d3'];
+                
+                // Convert flights to GeoJSON LineString features
+                const flightFeatures = flights.map(function(flight, index) {
+                    const fromAirport = airports[flight.from];
+                    const toAirport = airports[flight.to];
+                    
+                    if (!fromAirport || !toAirport) {
+                        console.warn('Missing airport data for flight ' + flight.route);
+                        return null;
+                    }
+                    
+                    return {
+                        type: 'Feature',
+                        properties: {
+                            route: flight.route,
+                            id: flight.id.toString(),
+                            color: colors[index % 8]
+                        },
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [fromAirport.longitude, fromAirport.latitude],
+                                [toAirport.longitude, toAirport.latitude]
+                            ]
+                        }
+                    };
+                }).filter(function(f) { return f !== null; });
+                
+                // Add source and layer for flight paths
+                map.addSource('flights', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: flightFeatures
+                    }
+                });
+                
+                // Add layer for flight paths
+                if (!map.getLayer('flights')) {
+                    map.addLayer({
+                        id: 'flights',
+                        type: 'line',
+                        source: 'flights',
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': ['get', 'color'],
+                            'line-width': 3,
+                            'line-opacity': 0.8
+                        }
+                    });
+                }
+                
+                console.log('Added ' + flightFeatures.length + ' flight paths');
+            }
+            
+            // Show photo overlay
+            function showPhotoOverlay(photo) {
+                const overlay = document.getElementById('photo-overlay');
+                const image = document.getElementById('photo-overlay-image');
+                const title = document.getElementById('photo-overlay-title');
+                const camera = document.getElementById('photo-overlay-camera');
+                const date = document.getElementById('photo-overlay-date');
+                const location = document.getElementById('photo-overlay-location');
+                
+                // Set photo data
+                image.src = photo.url;
+                image.alt = photo.originalName || photo.filename;
+                title.textContent = photo.originalName || photo.filename;
+                
+                if (photo.cameraMake && photo.cameraModel) {
+                    camera.textContent = photo.cameraMake + ' ' + photo.cameraModel;
+                    camera.style.display = 'block';
+                } else {
+                    camera.style.display = 'none';
+                }
+                
+                if (photo.dateTime) {
+                    date.textContent = new Date(photo.dateTime).toLocaleDateString();
+                    date.style.display = 'block';
+                } else {
+                    date.style.display = 'none';
+                }
+                
+                const lat = photo.location.latitude.toFixed(6);
+                const lng = photo.location.longitude.toFixed(6);
+                const altText = photo.location.altitude ? ' (' + photo.location.altitude.toFixed(0) + 'm)' : '';
+                location.textContent = lat + ', ' + lng + altText;
+                
+                // Show overlay
+                overlay.classList.add('show');
+            }
+            
+            // Close photo overlay
+            function closePhotoOverlay() {
+                const overlay = document.getElementById('photo-overlay');
+                overlay.classList.remove('show');
+            }
+            
+            // Close overlay when clicking outside the content
+            document.getElementById('photo-overlay').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closePhotoOverlay();
+                }
             });
         </script>
     </body>
