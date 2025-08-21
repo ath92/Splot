@@ -80,7 +80,11 @@
                 ],
               },
             });
-            
+            map.on("load", () => {
+                map.setProjection({
+                    type: 'globe'
+                })
+            });
         </script>
     </body>
 </html>
