@@ -54,6 +54,45 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       })
 
       console.log('MapLibre map initialized:', map.current)
+      
+      // Add debugging for map events
+      map.current.on('styledata', () => {
+        console.log('Map style data loaded')
+      })
+      
+      map.current.on('sourcedata', (e) => {
+        console.log('Map source data event:', e.sourceId, e.isSourceLoaded)
+      })
+      
+      map.current.on('error', (e) => {
+        console.error('Map error:', e)
+        
+        // If it's a source error and we're using our custom style, try falling back to demo tiles
+        if (e.error && e.error.message && typeof mapStyle === 'object') {
+          console.log('Detected worker tile loading issue, attempting fallback to demo tiles...')
+          try {
+            map.current?.setStyle('https://demotiles.maplibre.org/style.json')
+            console.log('Successfully switched to demo tiles fallback')
+            return
+          } catch (fallbackError) {
+            console.error('Fallback to demo tiles also failed:', fallbackError)
+          }
+        }
+        
+        setError('Map failed to load: ' + (e.error?.message || 'Unknown error'))
+        setIsLoading(false)
+      })
+      
+      // Set a timeout fallback in case map never loads
+      setTimeout(() => {
+        if (map.current && map.current.loaded()) {
+          console.log('Map loaded via timeout check')
+          setIsLoading(false)
+        } else {
+          console.warn('Map still not loaded after 15 seconds, forcing load completion')
+          setIsLoading(false)
+        }
+      }, 15000)
 
       // Force the map to render by triggering a resize
       setTimeout(() => {
