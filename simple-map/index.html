@@ -210,110 +210,88 @@
                     type: 'globe'
                 });
                 
-                // Add photos and flight paths after map loads
-                addPhotoMarkers(map);
-                addFlightPaths(map);
+                // Load data and add features to map
+                loadDataAndInitialize();
             });
             
-            // Fallback: add photos and flight paths after a timeout even if load event doesn't fire
+            // Fallback: load data and add features after a timeout even if load event doesn't fire
             setTimeout(() => {
-                console.log('Timeout fallback: adding photos and flights');
-                addPhotoMarkers(map);
-                addFlightPaths(map);
+                console.log('Timeout fallback: loading data and adding features');
+                loadDataAndInitialize();
             }, 3000);
             
-            // Sample photo data (fallback for development)
-            const samplePhotos = [
-                {
-                    filename: 'test-photo-1.jpg',
-                    url: 'https://picsum.photos/800/600?random=1',
-                    location: { latitude: 40.7128, longitude: -74.0060, altitude: 10 },
-                    uploadedAt: '2024-01-01T12:00:00Z',
-                    fileSize: 1024000,
-                    originalName: 'New York City.jpg',
-                    cameraMake: 'Canon',
-                    cameraModel: 'EOS R5',
-                    dateTime: '2024-01-01T12:00:00Z'
-                },
-                {
-                    filename: 'test-photo-2.jpg',
-                    url: 'https://picsum.photos/800/600?random=2',
-                    location: { latitude: 51.5074, longitude: -0.1278, altitude: 11 },
-                    uploadedAt: '2024-01-02T12:00:00Z',
-                    fileSize: 1536000,
-                    originalName: 'London.jpg',
-                    cameraMake: 'Sony',
-                    cameraModel: 'A7R IV',
-                    dateTime: '2024-01-02T12:00:00Z'
-                },
-                {
-                    filename: 'test-photo-3.jpg',
-                    url: 'https://picsum.photos/800/600?random=3',
-                    location: { latitude: 35.6762, longitude: 139.6503, altitude: 40 },
-                    uploadedAt: '2024-01-03T12:00:00Z',
-                    fileSize: 2048000,
-                    originalName: 'Tokyo.jpg',
-                    cameraMake: 'Nikon',
-                    cameraModel: 'D850',
-                    dateTime: '2024-01-03T12:00:00Z'
+            // Photo worker configuration
+            const WORKER_URL = 'https://splot-photo-worker.tomhutman.workers.dev';
+            
+            // Global variables for photos and flights data
+            let photosData = [];
+            let flightsData = null;
+            
+            // Fetch photos from the worker API
+            async function fetchPhotos() {
+                try {
+                    const response = await fetch(`${WORKER_URL}/photos`);
+                    if (!response.ok) {
+                        console.warn('Failed to fetch photos:', response.status);
+                        return { photos: [], count: 0 };
+                    }
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.warn('Error fetching photos:', error.message);
+                    return { photos: [], count: 0 };
                 }
-            ];
+            }
+            
+            // Fetch flight data from JSON file
+            async function fetchFlights() {
+                try {
+                    const response = await fetch('./flights.json');
+                    if (!response.ok) {
+                        console.warn('Failed to fetch flights:', response.status);
+                        return null;
+                    }
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.warn('Error fetching flights:', error.message);
+                    return null;
+                }
+            }
+            
+            // Load data and initialize map features
+            async function loadDataAndInitialize() {
+                // Load photos and flights in parallel
+                const [photosResult, flightsResult] = await Promise.all([
+                    fetchPhotos(),
+                    fetchFlights()
+                ]);
+                
+                photosData = photosResult.photos || [];
+                flightsData = flightsResult;
+                
+                console.log(`Loaded ${photosData.length} photos and ${flightsData ? 'flight data' : 'no flight data'}`);
+                
+                // Add features to map if it's ready
+                if (map.isStyleLoaded()) {
+                    addPhotoMarkers(map);
+                    addFlightPaths(map);
+                }
+            }
             
             // Flight data
             const flightsData = {
-                "airports": {
-                    "AMS": {"code": "AMS", "name": "Amsterdam Airport Schiphol", "city": "Amsterdam", "country": "Netherlands", "latitude": 52.3105, "longitude": 4.7683},
-                    "XMN": {"code": "XMN", "name": "Xiamen Gaoqi International Airport", "city": "Xiamen", "country": "China", "latitude": 24.5440, "longitude": 118.1281},
-                    "KWL": {"code": "KWL", "name": "Guilin Liangjiang International Airport", "city": "Guilin", "country": "China", "latitude": 25.2181, "longitude": 110.0394},
-                    "DYG": {"code": "DYG", "name": "Zhangjiajie Hehua Airport", "city": "Zhangjiajie", "country": "China", "latitude": 29.1028, "longitude": 110.4436},
-                    "XIY": {"code": "XIY", "name": "Xi'an Xianyang International Airport", "city": "Xi'an", "country": "China", "latitude": 34.4472, "longitude": 108.7539},
-                    "PVG": {"code": "PVG", "name": "Shanghai Pudong International Airport", "city": "Shanghai", "country": "China", "latitude": 31.1443, "longitude": 121.8083},
-                    "ICN": {"code": "ICN", "name": "Incheon International Airport", "city": "Seoul", "country": "South Korea", "latitude": 37.4602, "longitude": 126.4407},
-                    "PUS": {"code": "PUS", "name": "Gimhae International Airport", "city": "Busan", "country": "South Korea", "latitude": 35.1795, "longitude": 128.9382},
-                    "TPE": {"code": "TPE", "name": "Taiwan Taoyuan International Airport", "city": "Taipei", "country": "Taiwan", "latitude": 25.0777, "longitude": 121.2328},
-                    "RMQ": {"code": "RMQ", "name": "Taichung Airport", "city": "Taichung", "country": "Taiwan", "latitude": 24.2647, "longitude": 120.6206},
-                    "HAN": {"code": "HAN", "name": "Noi Bai International Airport", "city": "Hanoi", "country": "Vietnam", "latitude": 21.2212, "longitude": 105.8067},
-                    "DAD": {"code": "DAD", "name": "Da Nang International Airport", "city": "Da Nang", "country": "Vietnam", "latitude": 16.0439, "longitude": 108.1994},
-                    "KUL": {"code": "KUL", "name": "Kuala Lumpur International Airport", "city": "Kuala Lumpur", "country": "Malaysia", "latitude": 2.7456, "longitude": 101.7072},
-                    "KBR": {"code": "KBR", "name": "Sultan Ismail Petra Airport", "city": "Kota Bharu", "country": "Malaysia", "latitude": 6.1664, "longitude": 102.2931},
-                    "PEN": {"code": "PEN", "name": "Penang International Airport", "city": "Penang", "country": "Malaysia", "latitude": 5.2971, "longitude": 100.2770},
-                    "BKI": {"code": "BKI", "name": "Kota Kinabalu International Airport", "city": "Kota Kinabalu", "country": "Malaysia", "latitude": 5.9372, "longitude": 116.0515},
-                    "SDK": {"code": "SDK", "name": "Sandakan Airport", "city": "Sandakan", "country": "Malaysia", "latitude": 5.9009, "longitude": 118.0595},
-                    "LOP": {"code": "LOP", "name": "Lombok International Airport", "city": "Lombok", "country": "Indonesia", "latitude": -8.7567, "longitude": 116.2266},
-                    "ENE": {"code": "ENE", "name": "Ende Airport", "city": "Flores", "country": "Indonesia", "latitude": -8.8492, "longitude": 121.6611},
-                    "CGK": {"code": "CGK", "name": "Soekarno-Hatta International Airport", "city": "Jakarta", "country": "Indonesia", "latitude": -6.1256, "longitude": 106.6559},
-                    "SIN": {"code": "SIN", "name": "Singapore Changi Airport", "city": "Singapore", "country": "Singapore", "latitude": 1.3644, "longitude": 103.9915},
-                    "CAN": {"code": "CAN", "name": "Guangzhou Baiyun International Airport", "city": "Guangzhou", "country": "China", "latitude": 23.3924, "longitude": 113.2988},
-                    "LGW": {"code": "LGW", "name": "London Gatwick Airport", "city": "London", "country": "United Kingdom", "latitude": 51.1481, "longitude": -0.1903},
-                    "LTN": {"code": "LTN", "name": "London Luton Airport", "city": "London", "country": "United Kingdom", "latitude": 51.8747, "longitude": -0.3683}
-                },
-                "flights": [
-                    {"id": 1, "from": "AMS", "to": "XMN", "route": "Amsterdam - Xiamen"},
-                    {"id": 2, "from": "XMN", "to": "KWL", "route": "Xiamen - Guilin"},
-                    {"id": 3, "from": "DYG", "to": "XIY", "route": "Zhangjiajie - Xi'an"},
-                    {"id": 4, "from": "PVG", "to": "ICN", "route": "Shanghai - Seoul"},
-                    {"id": 5, "from": "PUS", "to": "TPE", "route": "Busan - Taipei"},
-                    {"id": 6, "from": "RMQ", "to": "HAN", "route": "Taichung - Hanoi"},
-                    {"id": 7, "from": "HAN", "to": "DAD", "route": "Hanoi - Da Nang"},
-                    {"id": 8, "from": "DAD", "to": "KUL", "route": "Da Nang - Kuala Lumpur"},
-                    {"id": 9, "from": "KUL", "to": "KBR", "route": "Kuala Lumpur - Kota Bharu"},
-                    {"id": 10, "from": "PEN", "to": "BKI", "route": "Penang - Kota Kinabalu"},
-                    {"id": 11, "from": "BKI", "to": "SDK", "route": "Kota Kinabalu - Sandakan"},
-                    {"id": 12, "from": "SDK", "to": "KUL", "route": "Sandakan - Kuala Lumpur"},
-                    {"id": 13, "from": "KUL", "to": "LOP", "route": "Kuala Lumpur - Lombok"},
-                    {"id": 14, "from": "ENE", "to": "CGK", "route": "Flores - Jakarta"},
-                    {"id": 15, "from": "CGK", "to": "SIN", "route": "Jakarta - Singapore"},
-                    {"id": 16, "from": "SIN", "to": "CAN", "route": "Singapore - Guangzhou"},
-                    {"id": 17, "from": "CAN", "to": "LGW", "route": "Guangzhou - London Gatwick"},
-                    {"id": 18, "from": "LTN", "to": "AMS", "route": "London Luton - Amsterdam"}
-                ]
-            };
             
             // Add photo markers to the map
             function addPhotoMarkers(map) {
-                console.log('Adding photo markers:', samplePhotos.length);
+                console.log('Adding photo markers:', photosData.length);
                 
-                // Check if source already exists to prevent "source already exists" error
+                // Skip if no photos or if source already exists
+                if (photosData.length === 0) {
+                    console.log('No photos to display');
+                    return;
+                }
+                
                 if (map.getSource('photos')) {
                     console.log('Photos source already exists, skipping addition');
                     return;
@@ -322,7 +300,7 @@
                 const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'];
                 
                 // Create GeoJSON source for photo markers
-                const photoFeatures = samplePhotos.map((photo, index) => ({
+                const photoFeatures = photosData.map((photo, index) => ({
                     type: 'Feature',
                     properties: {
                         photo: JSON.stringify(photo), // Store photo data for click handling
@@ -385,12 +363,12 @@
                     map.getCanvas().style.cursor = '';
                 });
                 
-                console.log('Added ' + samplePhotos.length + ' photo markers as GeoJSON features');
+                console.log('Added ' + photosData.length + ' photo markers as GeoJSON features');
                 
                 // Zoom to show the first marker with globe-appropriate zoom
-                if (samplePhotos.length > 0) {
+                if (photosData.length > 0) {
                     map.flyTo({
-                        center: [samplePhotos[0].location.longitude, samplePhotos[0].location.latitude],
+                        center: [photosData[0].location.longitude, photosData[0].location.latitude],
                         zoom: 3,
                         duration: 2000
                     });
@@ -401,7 +379,12 @@
             function addFlightPaths(map) {
                 console.log('Adding flight paths');
                 
-                // Check if source already exists to prevent "source already exists" error
+                // Skip if no flight data or if source already exists
+                if (!flightsData) {
+                    console.log('No flight data available');
+                    return;
+                }
+                
                 if (map.getSource('flights')) {
                     console.log('Flights source already exists, skipping addition');
                     return;

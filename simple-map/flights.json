@@ -1,0 +1,306 @@
+{
+  "airports": {
+    "AMS": {
+      "code": "AMS",
+      "name": "Amsterdam Airport Schiphol",
+      "city": "Amsterdam",
+      "country": "Netherlands",
+      "latitude": 52.3105,
+      "longitude": 4.7683
+    },
+    "XMN": {
+      "code": "XMN", 
+      "name": "Xiamen Gaoqi International Airport",
+      "city": "Xiamen",
+      "country": "China",
+      "latitude": 24.5440,
+      "longitude": 118.1281
+    },
+    "KWL": {
+      "code": "KWL",
+      "name": "Guilin Liangjiang International Airport", 
+      "city": "Guilin",
+      "country": "China",
+      "latitude": 25.2181,
+      "longitude": 110.0394
+    },
+    "DYG": {
+      "code": "DYG",
+      "name": "Zhangjiajie Hehua Airport",
+      "city": "Zhangjiajie", 
+      "country": "China",
+      "latitude": 29.1028,
+      "longitude": 110.4436
+    },
+    "XIY": {
+      "code": "XIY",
+      "name": "Xi'an Xianyang International Airport",
+      "city": "Xi'an",
+      "country": "China", 
+      "latitude": 34.4472,
+      "longitude": 108.7539
+    },
+    "PVG": {
+      "code": "PVG",
+      "name": "Shanghai Pudong International Airport",
+      "city": "Shanghai",
+      "country": "China",
+      "latitude": 31.1443,
+      "longitude": 121.8083
+    },
+    "ICN": {
+      "code": "ICN",
+      "name": "Incheon International Airport",
+      "city": "Seoul",
+      "country": "South Korea",
+      "latitude": 37.4602,
+      "longitude": 126.4407
+    },
+    "PUS": {
+      "code": "PUS", 
+      "name": "Gimhae International Airport",
+      "city": "Busan",
+      "country": "South Korea",
+      "latitude": 35.1795,
+      "longitude": 128.9382
+    },
+    "TPE": {
+      "code": "TPE",
+      "name": "Taiwan Taoyuan International Airport", 
+      "city": "Taipei",
+      "country": "Taiwan",
+      "latitude": 25.0777,
+      "longitude": 121.2328
+    },
+    "RMQ": {
+      "code": "RMQ",
+      "name": "Taichung Airport",
+      "city": "Taichung", 
+      "country": "Taiwan",
+      "latitude": 24.2647,
+      "longitude": 120.6206
+    },
+    "HAN": {
+      "code": "HAN",
+      "name": "Noi Bai International Airport",
+      "city": "Hanoi",
+      "country": "Vietnam", 
+      "latitude": 21.2212,
+      "longitude": 105.8067
+    },
+    "DAD": {
+      "code": "DAD",
+      "name": "Da Nang International Airport",
+      "city": "Da Nang",
+      "country": "Vietnam",
+      "latitude": 16.0439,
+      "longitude": 108.1994
+    },
+    "KUL": {
+      "code": "KUL", 
+      "name": "Kuala Lumpur International Airport",
+      "city": "Kuala Lumpur",
+      "country": "Malaysia",
+      "latitude": 2.7456,
+      "longitude": 101.7072
+    },
+    "KBR": {
+      "code": "KBR",
+      "name": "Sultan Ismail Petra Airport",
+      "city": "Kota Bharu",
+      "country": "Malaysia",
+      "latitude": 6.1664,
+      "longitude": 102.2931
+    },
+    "PEN": {
+      "code": "PEN",
+      "name": "Penang International Airport",
+      "city": "Penang", 
+      "country": "Malaysia",
+      "latitude": 5.2971,
+      "longitude": 100.2770
+    },
+    "BKI": {
+      "code": "BKI",
+      "name": "Kota Kinabalu International Airport",
+      "city": "Kota Kinabalu",
+      "country": "Malaysia",
+      "latitude": 5.9372,
+      "longitude": 116.0515
+    },
+    "SDK": {
+      "code": "SDK", 
+      "name": "Sandakan Airport",
+      "city": "Sandakan",
+      "country": "Malaysia",
+      "latitude": 5.9009,
+      "longitude": 118.0595
+    },
+    "LOP": {
+      "code": "LOP",
+      "name": "Lombok International Airport",
+      "city": "Lombok",
+      "country": "Indonesia",
+      "latitude": -8.7567,
+      "longitude": 116.2266
+    },
+    "ENE": {
+      "code": "ENE",
+      "name": "Ende Airport",
+      "city": "Flores",
+      "country": "Indonesia", 
+      "latitude": -8.8492,
+      "longitude": 121.6611
+    },
+    "CGK": {
+      "code": "CGK",
+      "name": "Soekarno-Hatta International Airport",
+      "city": "Jakarta",
+      "country": "Indonesia",
+      "latitude": -6.1256,
+      "longitude": 106.6559
+    },
+    "SIN": {
+      "code": "SIN",
+      "name": "Singapore Changi Airport",
+      "city": "Singapore", 
+      "country": "Singapore",
+      "latitude": 1.3644,
+      "longitude": 103.9915
+    },
+    "CAN": {
+      "code": "CAN",
+      "name": "Guangzhou Baiyun International Airport",
+      "city": "Guangzhou",
+      "country": "China",
+      "latitude": 23.3924,
+      "longitude": 113.2988
+    },
+    "LGW": {
+      "code": "LGW",
+      "name": "London Gatwick Airport",
+      "city": "London",
+      "country": "United Kingdom",
+      "latitude": 51.1481,
+      "longitude": -0.1903
+    },
+    "LTN": {
+      "code": "LTN", 
+      "name": "London Luton Airport",
+      "city": "London",
+      "country": "United Kingdom",
+      "latitude": 51.8747,
+      "longitude": -0.3683
+    }
+  },
+  "flights": [
+    {
+      "id": 1,
+      "from": "AMS",
+      "to": "XMN",
+      "route": "Amsterdam - Xiamen"
+    },
+    {
+      "id": 2,
+      "from": "XMN", 
+      "to": "KWL",
+      "route": "Xiamen - Guilin"
+    },
+    {
+      "id": 3,
+      "from": "DYG",
+      "to": "XIY", 
+      "route": "Zhangjiajie - Xi'an"
+    },
+    {
+      "id": 4,
+      "from": "PVG",
+      "to": "ICN",
+      "route": "Shanghai - Seoul"
+    },
+    {
+      "id": 5,
+      "from": "PUS", 
+      "to": "TPE",
+      "route": "Busan - Taipei"
+    },
+    {
+      "id": 6,
+      "from": "RMQ",
+      "to": "HAN",
+      "route": "Taichung - Hanoi"
+    },
+    {
+      "id": 7,
+      "from": "HAN",
+      "to": "DAD", 
+      "route": "Hanoi - Da Nang"
+    },
+    {
+      "id": 8,
+      "from": "DAD",
+      "to": "KUL",
+      "route": "Da Nang - Kuala Lumpur"
+    },
+    {
+      "id": 9,
+      "from": "KUL",
+      "to": "KBR",
+      "route": "Kuala Lumpur - Kota Bharu"
+    },
+    {
+      "id": 10,
+      "from": "PEN",
+      "to": "BKI",
+      "route": "Penang - Kota Kinabalu"
+    },
+    {
+      "id": 11,
+      "from": "BKI",
+      "to": "SDK", 
+      "route": "Kota Kinabalu - Sandakan"
+    },
+    {
+      "id": 12,
+      "from": "SDK",
+      "to": "KUL",
+      "route": "Sandakan - Kuala Lumpur"
+    },
+    {
+      "id": 13,
+      "from": "KUL",
+      "to": "LOP",
+      "route": "Kuala Lumpur - Lombok"
+    },
+    {
+      "id": 14,
+      "from": "ENE", 
+      "to": "CGK",
+      "route": "Flores - Jakarta"
+    },
+    {
+      "id": 15,
+      "from": "CGK",
+      "to": "SIN",
+      "route": "Jakarta - Singapore"
+    },
+    {
+      "id": 16,
+      "from": "SIN",
+      "to": "CAN",
+      "route": "Singapore - Guangzhou"
+    },
+    {
+      "id": 17,
+      "from": "CAN",
+      "to": "LGW",
+      "route": "Guangzhou - London Gatwick"
+    },
+    {
+      "id": 18,
+      "from": "LTN",
+      "to": "AMS",
+      "route": "London Luton - Amsterdam"
+    }
+  ]
+}
