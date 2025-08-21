@@ -16,10 +16,12 @@ This folder contains a single-file setup for a MapLibre map that loads PMTiles d
 ### Option 1: Local Development Server
 
 ```bash
-# Using Node.js serve (recommended)
+# Using Node.js serve (recommended - supports range requests for PMTiles)
 npx serve -p 8080 .
 
-# Or using Python (basic, may have issues with large files)
+# Or using Python (basic, may have issues with large PMTiles files)
+# Note: Python's built-in server doesn't support range requests properly,
+# which can cause PMTiles zoom functionality to fail
 python3 -m http.server 8080
 ```
 
