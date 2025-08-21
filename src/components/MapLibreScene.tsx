@@ -35,20 +35,31 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       
       console.log('Using pmtiles TileJSON URL:', PMTILES_URL);
       
-      // Try to use custom protomaps style first, fallback to demo tiles
-      let mapStyle: string | object;
+      // Test if we can actually fetch the TileJSON URL directly
       try {
-        mapStyle = createProtomapsStyle(PMTILES_URL);
-        console.log('Using custom protomaps style with worker endpoint');
-      } catch (styleError) {
-        console.warn('Failed to create custom style, falling back to demo tiles:', styleError);
-        mapStyle = 'https://demotiles.maplibre.org/style.json';
+        console.log('Testing direct fetch of TileJSON...');
+        const response = await fetch(PMTILES_URL);
+        console.log('TileJSON fetch response:', response.status, response.statusText);
+        if (response.ok) {
+          const tileJson = await response.json();
+          console.log('TileJSON data received:', Object.keys(tileJson));
+          console.log('TileJSON tiles URL pattern:', tileJson.tiles);
+        } else {
+          console.error('TileJSON fetch failed:', response.status, response.statusText);
+        }
+      } catch (fetchError) {
+        console.error('TileJSON fetch error:', fetchError);
       }
+      
+      // Use custom protomaps style with worker endpoint
+      const mapStyle = createProtomapsStyle(PMTILES_URL);
+      console.log('Using custom protomaps style with worker endpoint');
+      console.log('Style config:', JSON.stringify(mapStyle, null, 2));
       
       // Initialize MapLibre map
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: mapStyle as string | maplibregl.StyleSpecification,
+        style: mapStyle as maplibregl.StyleSpecification,
         center: [0, 0],
         zoom: 1
       })
@@ -63,8 +74,8 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         }
       }, 100)
 
-      // Add a basic layer after the map loads
-      map.current.on('load', async () => {
+      // Set up load event
+      const handleMapLoad = async () => {
         console.log('Map load event fired')
         setIsLoading(false)
         
@@ -139,16 +150,54 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               console.warn('Failed to load flights data:', err instanceof Error ? err.message : 'Failed to load flights')
             }
 
-
           } catch (err) {
             console.error('Error loading data:', err)
             setError(err instanceof Error ? err.message : 'Failed to load data')
           }
         }
-      })
+      };
+
+      map.current.on('load', handleMapLoad)
+
+      // Add debugging event listeners
+      map.current.on('sourcedata', (e) => {
+        console.log('Source data event:', e.sourceId, e.dataType, e.isSourceLoaded);
+      });
+
+      map.current.on('data', (e) => {
+        console.log('Data event:', e.dataType);
+      });
+
+      map.current.on('style.load', () => {
+        console.log('Style loaded successfully');
+      });
+
+      map.current.on('styledata', (e) => {
+        console.log('Style data event:', e.dataType);
+        if (e.dataType === 'style') {
+          console.log('Style sources:', Object.keys(map.current?.getStyle()?.sources || {}));
+        }
+      });
+
+      map.current.on('sourcedataloading', (e) => {
+        console.log('Source data loading:', e.sourceId, e.dataType);
+      });
+
+      // Add a safety timeout in case the load event never fires
+      setTimeout(() => {
+        if (document.querySelector('.loading-overlay')) {
+          console.log('Safety timeout: map load event did not fire after 15 seconds, something may be wrong with tile loading')
+          setError('Map tiles failed to load from worker endpoint')
+          setIsLoading(false)
+        }
+      }, 15000)
 
       map.current.on('error', (e: maplibregl.ErrorEvent) => {
         console.error('Map error:', e)
+        console.error('Error details:', e.error)
+        if (e.sourceId) {
+          console.error('Error source:', e.sourceId)
+        }
         setError(`Map error: ${e.error?.message || 'Unknown error'}`)
         setIsLoading(false)
       })

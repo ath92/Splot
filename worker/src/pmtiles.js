@@ -40,29 +40,40 @@ class R2Source {
   }
 
   async getBytes(offset, length, signal, etag) {
-    const resp = await this.env.TILES.get(
-      `${this.archiveName}.pmtiles`,
-      {
-        range: { offset: offset, length: length },
-        onlyIf: etag ? { etagMatches: etag } : undefined,
-      }
-    );
+    const archiveKey = `${this.archiveName}.pmtiles`;
+    console.log("Attempting to fetch PMTiles archive:", archiveKey, "range:", offset, "-", offset + length);
     
-    if (!resp) {
-      throw new KeyNotFoundError("Archive not found");
-    }
+    try {
+      const resp = await this.env.TILES.get(
+        archiveKey,
+        {
+          range: { offset: offset, length: length },
+          onlyIf: etag ? { etagMatches: etag } : undefined,
+        }
+      );
+      
+      if (!resp) {
+        console.error("R2 returned null for archive:", archiveKey);
+        throw new KeyNotFoundError("Archive not found");
+      }
 
-    if (!resp.body) {
-      throw new EtagMismatch();
-    }
+      if (!resp.body) {
+        console.error("ETag mismatch for archive:", archiveKey);
+        throw new EtagMismatch();
+      }
 
-    const data = await resp.arrayBuffer();
-    return {
-      data: data,
-      etag: resp.etag,
-      cacheControl: resp.httpMetadata?.cacheControl,
-      expires: resp.httpMetadata?.cacheExpiry?.toISOString(),
-    };
+      console.log("Successfully fetched range from PMTiles archive:", archiveKey);
+      const data = await resp.arrayBuffer();
+      return {
+        data: data,
+        etag: resp.etag,
+        cacheControl: resp.httpMetadata?.cacheControl,
+        expires: resp.httpMetadata?.cacheExpiry?.toISOString(),
+      };
+    } catch (error) {
+      console.error("Error accessing R2 bucket for archive:", archiveKey, "Error:", error.message);
+      throw error;
+    }
   }
 }
 
@@ -89,7 +100,22 @@ function parseTilePath(pathname) {
  * Handle PMTiles requests
  */
 export async function handlePMTilesRequest(request, env, ctx) {
-  if (request.method.toUpperCase() !== "GET") {
+  // Handle CORS preflight requests
+  if (request.method.toUpperCase() === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Range, If-None-Match, If-Modified-Since, Cache-Control, X-Requested-With",
+        "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges, ETag, Last-Modified, Cache-Control",
+        "Access-Control-Max-Age": "86400",
+        "Vary": "Origin, Access-Control-Request-Headers",
+      }
+    });
+  }
+
+  if (!["GET", "HEAD"].includes(request.method.toUpperCase())) {
     return new Response(undefined, { status: 405 });
   }
 
@@ -100,12 +126,14 @@ export async function handlePMTilesRequest(request, env, ctx) {
     return new Response("Invalid tile URL", { status: 404 });
   }
 
-  // CORS handling
+  // CORS handling with comprehensive headers for MapLibre/PMTiles
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Vary": "Origin",
+    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Range, If-None-Match, If-Modified-Since, Cache-Control, X-Requested-With",
+    "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges, ETag, Last-Modified, Cache-Control",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin, Access-Control-Request-Headers",
   };
 
   // Check cache first
@@ -211,9 +239,10 @@ export async function handlePMTilesRequest(request, env, ctx) {
     
   } catch (e) {
     if (e instanceof KeyNotFoundError) {
+      console.error("PMTiles archive not found:", name, "Error:", e.message);
       return cacheableResponse("Archive not found", new Headers(), 404);
     }
-    console.error("PMTiles error:", e);
+    console.error("PMTiles error for archive:", name, "Error:", e.message, "Stack:", e.stack);
     return cacheableResponse("Internal server error", new Headers(), 500);
   }
 }
