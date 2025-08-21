@@ -33,7 +33,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       const PMTILES_URL = import.meta.env.VITE_PMTILES_URL || 
         `https://ath92.github.io/Splot/simple-map/world-tiles-simple.pmtiles`;
       
-      console.log('Using pmtiles TileJSON URL:', PMTILES_URL);
+      console.log('Using pmtiles TileJSON URL:', WORKER_URL, PMTILES_URL);
       
       // Try to use custom protomaps style first, fallback to demo tiles
       let mapStyle: string | object;
