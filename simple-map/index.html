@@ -22,7 +22,7 @@
             // but requires an additional blocking HTTP request before loading the map.
             let protocol = new pmtiles.Protocol({metadata: true});
             maplibregl.addProtocol("pmtiles", protocol.tile);
-            const currenUrl = window.location;
+            const currentUrl = window.location;
             const pmtilesUrl = `pmtiles://${currentUrl.origin}${currentUrl.pathname.replace(/\/[^\/]*$/, '')}/world-tiles-simple.pmtiles`;
             const map = new maplibregl.Map({
               container: "map",
