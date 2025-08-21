@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import * as pmtiles from 'pmtiles'
 import type { Feature } from 'geojson'
 import { 
   fetchPhotos, 
@@ -9,7 +10,6 @@ import {
 import { 
   getFlightsData
 } from '../services/flightsService'
-import { createProtomapsStyle } from '../services/mapStyleService'
 
 interface MapLibreSceneProps {
   onPhotoClick: (photo: Photo) => void
@@ -28,31 +28,92 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight)
 
     try {
-      // Configuration for custom pmtiles - use worker endpoint instead of direct R2
-      const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://splot-photo-worker.tomhutman.workers.dev';
-      const PMTILES_URL = import.meta.env.VITE_PMTILES_URL || 
-        `${WORKER_URL}/tiles/world-tiles.json`;
+      // Try PMTiles approach (like simple-map), fallback to demo tiles
+      let mapStyle: maplibregl.StyleSpecification | string;
+      let usePMTiles = true;
       
-      console.log('Using pmtiles TileJSON URL:', PMTILES_URL);
-      // Try to use custom protomaps style first, fallback to demo tiles
-      let mapStyle: string | object;
       try {
-        mapStyle = createProtomapsStyle(PMTILES_URL);
-        console.log('Using custom protomaps style with worker endpoint');
-      } catch (styleError) {
-        console.warn('Failed to create custom style, falling back to demo tiles:', styleError);
+        // Set up PMTiles protocol for direct pmtiles file loading  
+        const protocol = new pmtiles.Protocol({metadata: true});
+        maplibregl.addProtocol("pmtiles", protocol.tile);
+        
+        // Use local pmtiles file from public folder
+        const currentUrl = window.location;
+        const pmtilesUrl = `pmtiles://${currentUrl.origin}/world-tiles-simple.pmtiles`;
+        
+        console.log('Attempting PMTiles URL:', pmtilesUrl);
+        
+        // Create map style similar to simple-map approach
+        mapStyle = {
+          version: 8,
+          sources: {
+            example_source: {
+              type: "vector",
+              url: pmtilesUrl,
+            },
+          },
+          layers: [
+            {
+              id: "background",
+              type: "background",
+              paint: {
+                "background-color": "#121212",
+              },
+            },
+            {
+              id: "water",
+              source: "example_source",
+              "source-layer": "water",
+              filter: ["==",["geometry-type"],"Polygon"],
+              type: "fill",
+              paint: {
+                "fill-color": "#80b1d3",
+              },
+            },
+            {
+              id: "buildings",
+              source: "example_source",
+              "source-layer": "buildings",
+              type: "fill",
+              paint: {
+                "fill-color": "#d9d9d9",
+              },
+            },
+            {
+              id: "roads",
+              source: "example_source",
+              "source-layer": "roads",
+              type: "line",
+              paint: {
+                "line-color": "#fc8d62",
+              },
+            },
+            {
+              id: "pois",
+              source: "example_source",
+              "source-layer": "pois",
+              type: "circle",
+              paint: {
+                "circle-color": "#ffffb3",
+              },
+            },
+          ],
+        };
+      } catch (pmtilesError) {
+        console.warn('Failed to setup PMTiles, falling back to demo tiles:', pmtilesError);
         mapStyle = 'https://demotiles.maplibre.org/style.json';
+        usePMTiles = false;
       }
       
       // Initialize MapLibre map
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: mapStyle as string | maplibregl.StyleSpecification,
-        center: [0, 0],
-        zoom: 1
+        style: mapStyle as maplibregl.StyleSpecification,
+        center: usePMTiles ? [11.2543435, 43.7672134] : [0, 0],
+        zoom: usePMTiles ? 3 : 1
       })
 
-      console.log('MapLibre map initialized:', map.current)
+      console.log('MapLibre map initialized with', usePMTiles ? 'PMTiles' : 'demo tiles')
 
       // Force the map to render by triggering a resize
       setTimeout(() => {
@@ -64,7 +125,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
       // Add a basic layer after the map loads
       map.current.on('load', async () => {
-        console.log('Map load event fired')
+        console.log('Map loaded successfully!')
         setIsLoading(false)
         
         // Set globe projection
