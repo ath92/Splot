@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple MapLibre with PMTiles</title>
+    <script src="maplibre-gl.js"></script>
+    <link href="maplibre-gl.css" rel="stylesheet">
+    <script src="pmtiles.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: Arial, sans-serif;
+            background: #121212;
+            color: #fff;
+        }
+        #map { 
+            position: absolute; 
+            top: 0; 
+            bottom: 0; 
+            width: 100%; 
+        }
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(18, 18, 18, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #4a5568;
+            max-width: 300px;
+            z-index: 1000;
+        }
+        .info-panel h3 {
+            margin: 0 0 10px 0;
+            color: #e2e8f0;
+            font-size: 18px;
+        }
+        .info-panel p {
+            margin: 5px 0;
+            color: #a0aec0;
+            font-size: 14px;
+        }
+        .info-panel .highlight {
+            color: #4fd1c7;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="info-panel">
+        <h3>Simple MapLibre + PMTiles</h3>
+        <p>This map loads <span class="highlight">PMTiles</span> directly from GitHub.</p>
+        <p><strong>Max zoom:</strong> <span class="highlight">6</span></p>
+        <p><strong>File size:</strong> <span class="highlight">~44 MB</span></p>
+        <p><strong>Protocol:</strong> <span class="highlight">PMTiles</span></p>
+        <p>Zoom and pan to explore the vector map data.</p>
+    </div>
+
+    <script>
+        // Add PMTiles protocol to MapLibre
+        const protocol = new pmtiles.Protocol();
+        maplibregl.addProtocol("pmtiles", protocol.tile);
+
+        // Get the current page URL and build the pmtiles file URL
+        const currentUrl = new URL(window.location);
+        const pmtilesUrl = `${currentUrl.origin}${currentUrl.pathname.replace(/\/[^\/]*$/, '')}/world-tiles-simple.pmtiles`;
+
+        console.log('Loading PMTiles from:', pmtilesUrl);
+
+        // Create the map style with PMTiles source
+        const mapStyle = {
+            "version": 8,
+            "name": "Simple PMTiles Map",
+            "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+            "sources": {
+                "protomaps": {
+                    "type": "vector",
+                    "url": `pmtiles://${pmtilesUrl}`,
+                    "attribution": "© OpenStreetMap contributors, © Protomaps"
+                }
+            },
+            "layers": [
+                {
+                    "id": "background",
+                    "type": "background",
+                    "paint": {
+                        "background-color": "#121212"
+                    }
+                },
+                {
+                    "id": "water",
+                    "type": "fill",
+                    "source": "protomaps",
+                    "source-layer": "water",
+                    "paint": {
+                        "fill-color": "#1e3a8a",
+                        "fill-opacity": 0.8
+                    }
+                },
+                {
+                    "id": "land",
+                    "type": "fill",
+                    "source": "protomaps", 
+                    "source-layer": "earth",
+                    "paint": {
+                        "fill-color": "#2d2d2d",
+                        "fill-opacity": 1
+                    }
+                },
+                {
+                    "id": "countries",
+                    "type": "line",
+                    "source": "protomaps",
+                    "source-layer": "boundaries",
+                    "filter": ["==", "admin_level", 2],
+                    "paint": {
+                        "line-color": "#4a5568",
+                        "line-width": 1,
+                        "line-opacity": 0.6
+                    }
+                },
+                {
+                    "id": "states",
+                    "type": "line", 
+                    "source": "protomaps",
+                    "source-layer": "boundaries",
+                    "filter": ["==", "admin_level", 4],
+                    "minzoom": 4,
+                    "paint": {
+                        "line-color": "#4a5568",
+                        "line-width": 0.5,
+                        "line-opacity": 0.4
+                    }
+                },
+                {
+                    "id": "roads",
+                    "type": "line",
+                    "source": "protomaps",
+                    "source-layer": "roads",
+                    "minzoom": 5,
+                    "paint": {
+                        "line-color": "#718096",
+                        "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 6, 1]
+                    }
+                },
+                {
+                    "id": "places",
+                    "type": "symbol",
+                    "source": "protomaps",
+                    "source-layer": "places",
+                    "minzoom": 3,
+                    "layout": {
+                        "text-field": "{name}",
+                        "text-font": ["sans-serif"],
+                        "text-size": ["interpolate", ["linear"], ["zoom"], 3, 10, 6, 14],
+                        "text-anchor": "center"
+                    },
+                    "paint": {
+                        "text-color": "#e2e8f0",
+                        "text-halo-color": "#1a202c",
+                        "text-halo-width": 1
+                    }
+                }
+            ]
+        };
+
+        // Initialize the map
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: mapStyle,
+            center: [0, 20], // Center on equator, slightly north
+            zoom: 1.5,
+            maxZoom: 6 // Match the pmtiles maxzoom
+        });
+
+        // Add navigation controls
+        map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+        // Log when map loads
+        map.on('load', () => {
+            console.log('Map loaded successfully!');
+            console.log('PMTiles source loaded from:', pmtilesUrl);
+            
+            // Set globe projection for a nice 3D effect
+            map.setProjection({
+                type: 'globe'
+            });
+        });
+
+        // Handle map errors
+        map.on('error', (e) => {
+            console.error('Map error:', e);
+            console.error('Error source:', e.source);
+            console.error('Error error:', e.error);
+        });
+
+        // Handle source errors specifically  
+        map.on('sourcedataloading', (e) => {
+            console.log('Source data loading:', e.sourceId);
+        });
+
+        // Handle source data loading
+        map.on('sourcedata', (e) => {
+            if (e.sourceId === 'protomaps') {
+                console.log('PMTiles source data event:', e.isSourceLoaded, e.dataType);
+                if (e.isSourceLoaded) {
+                    console.log('PMTiles source data loaded successfully');
+                }
+            }
+        });
+
+        // Handle style data
+        map.on('styledata', (e) => {
+            console.log('Style data loaded:', e.dataType);
+        });
+
+        // Handle data loading
+        map.on('data', (e) => {
+            console.log('Data event:', e.sourceId, e.dataType);
+        });
+    </script>
+</body>
+</html>
