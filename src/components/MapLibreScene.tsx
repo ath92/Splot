@@ -45,6 +45,10 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         mapStyle = 'https://demotiles.maplibre.org/style.json';
       }
       
+      // Temporary: Force fallback to demo tiles to test network connectivity
+      console.log('Temporarily testing with demo tiles due to potential CORS/network issues');
+      mapStyle = 'https://demotiles.maplibre.org/style.json';
+      
       // Initialize MapLibre map
       map.current = new maplibregl.Map({
         container: mapContainer.current,
@@ -54,6 +58,32 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       })
 
       console.log('MapLibre map initialized:', map.current)
+      
+      // Add debugging for map events
+      map.current.on('styledata', () => {
+        console.log('Map style data loaded')
+      })
+      
+      map.current.on('sourcedata', (e) => {
+        console.log('Map source data event:', e.sourceId, e.isSourceLoaded)
+      })
+      
+      map.current.on('error', (e) => {
+        console.error('Map error:', e)
+        setError('Map failed to load: ' + (e.error?.message || 'Unknown error'))
+        setIsLoading(false)
+      })
+      
+      // Set a timeout fallback in case map never loads
+      setTimeout(() => {
+        if (map.current && map.current.loaded()) {
+          console.log('Map loaded via timeout check')
+          setIsLoading(false)
+        } else {
+          console.warn('Map still not loaded after 30 seconds, forcing load completion')
+          setIsLoading(false)
+        }
+      }, 30000)
 
       // Force the map to render by triggering a resize
       setTimeout(() => {
