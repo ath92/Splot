@@ -43,7 +43,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         
         console.log('Attempting PMTiles URL:', pmtilesUrl);
         
-        // Create map style similar to simple-map approach
+        // Create map style with typical map colors and basic improvements
         mapStyle = {
           version: 8,
           sources: {
@@ -57,7 +57,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               id: "background",
               type: "background",
               paint: {
-                "background-color": "#121212",
+                "background-color": "#f0f8ff",
               },
             },
             {
@@ -67,34 +67,43 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               filter: ["==",["geometry-type"],"Polygon"],
               type: "fill",
               paint: {
-                "fill-color": "#80b1d3",
+                "fill-color": "#4285f4",
+                "fill-opacity": 0.8,
               },
             },
             {
               id: "buildings",
               source: "example_source",
               "source-layer": "buildings",
+              minzoom: 14,
               type: "fill",
               paint: {
-                "fill-color": "#d9d9d9",
+                "fill-color": "#d0d0d0",
+                "fill-opacity": 0.7,
               },
             },
             {
               id: "roads",
               source: "example_source",
               "source-layer": "roads",
+              minzoom: 6,
               type: "line",
               paint: {
-                "line-color": "#fc8d62",
+                "line-color": "#ffffff",
+                "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.5, 12, 2],
+                "line-opacity": 0.8,
               },
             },
             {
               id: "pois",
               source: "example_source",
               "source-layer": "pois",
+              minzoom: 12,
               type: "circle",
               paint: {
-                "circle-color": "#ffffb3",
+                "circle-color": "#ff6b35",
+                "circle-radius": 4,
+                "circle-opacity": 0.8,
               },
             },
           ],
