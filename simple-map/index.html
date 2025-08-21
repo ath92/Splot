@@ -61,7 +61,9 @@
 
     <script>
         // Add PMTiles protocol to MapLibre
-        const protocol = new pmtiles.Protocol();
+        const protocol = new pmtiles.Protocol({
+            metadata: true
+        });
         maplibregl.addProtocol("pmtiles", protocol.tile);
 
         // Get the current page URL and build the pmtiles file URL
