@@ -2,8 +2,8 @@
     <head>
         <title>PMTiles MapLibre Example</title>
         <meta charset="utf-8"/>
-        <link rel="stylesheet" href="maplibre-gl.css" crossorigin="anonymous">
-        <script src="maplibre-gl.js" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="maplibre-gl.css" >
+        <script src="maplibre-gl.js" ></script>
         <script src="pmtiles.js"></script>
         <style>
             body {
@@ -22,6 +22,7 @@
             // but requires an additional blocking HTTP request before loading the map.
             let protocol = new pmtiles.Protocol({metadata: true});
             maplibregl.addProtocol("pmtiles", protocol.tile);
+            const currenUrl = window.location;
             const pmtilesUrl = `pmtiles://${currentUrl.origin}${currentUrl.pathname.replace(/\/[^\/]*$/, '')}/world-tiles-simple.pmtiles`;
             const map = new maplibregl.Map({
               container: "map",
