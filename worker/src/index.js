@@ -11,11 +11,29 @@ import { handlePMTilesRequest } from './pmtiles.js';
 
 const app = new Hono();
 
-// Add CORS middleware
+// Add CORS middleware with comprehensive headers for MapLibre/PMTiles
 app.use('*', cors({
   origin: "*",
-  allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowHeaders: ["Content-Type"]
+  allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
+  allowHeaders: [
+    "Content-Type",
+    "Authorization", 
+    "Range",
+    "If-None-Match",
+    "If-Modified-Since",
+    "Cache-Control",
+    "X-Requested-With"
+  ],
+  exposeHeaders: [
+    "Content-Length",
+    "Content-Range", 
+    "Accept-Ranges",
+    "ETag",
+    "Last-Modified",
+    "Cache-Control"
+  ],
+  credentials: false,
+  maxAge: 86400 // 24 hours
 }));
 
 // Routes
@@ -23,6 +41,34 @@ app.get('/', (c) => serveUploadForm());
 app.post('/', async (c) => handlePhotoUpload(c));
 app.get('/photos', async (c) => handlePhotoList(c));
 app.get('/photo/:filename', async (c) => handlePhotoServe(c));
+
+// Health check endpoint
+app.get('/health', async (c) => {
+  const env = c.env;
+  
+  const health = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    buckets: {
+      globe: !!env.GLOBE,
+      tiles: !!env.TILES
+    }
+  };
+  
+  // Test R2 bucket access
+  try {
+    if (env.TILES) {
+      const list = await env.TILES.list({ limit: 1 });
+      health.buckets.tilesAccessible = true;
+      health.buckets.tilesObjects = list.objects.length;
+    }
+  } catch (error) {
+    health.buckets.tilesAccessible = false;
+    health.buckets.tilesError = error.message;
+  }
+  
+  return c.json(health);
+});
 
 // PMTiles routes
 app.get('/tiles/:name/:z/:x/:y.:ext', async (c) => {

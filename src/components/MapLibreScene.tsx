@@ -35,9 +35,26 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
       
       console.log('Using pmtiles TileJSON URL:', PMTILES_URL);
       
+      // Test if we can actually fetch the TileJSON URL directly
+      try {
+        console.log('Testing direct fetch of TileJSON...');
+        const response = await fetch(PMTILES_URL);
+        console.log('TileJSON fetch response:', response.status, response.statusText);
+        if (response.ok) {
+          const tileJson = await response.json();
+          console.log('TileJSON data received:', Object.keys(tileJson));
+          console.log('TileJSON tiles URL pattern:', tileJson.tiles);
+        } else {
+          console.error('TileJSON fetch failed:', response.status, response.statusText);
+        }
+      } catch (fetchError) {
+        console.error('TileJSON fetch error:', fetchError);
+      }
+      
       // Use custom protomaps style with worker endpoint
       const mapStyle = createProtomapsStyle(PMTILES_URL);
       console.log('Using custom protomaps style with worker endpoint');
+      console.log('Style config:', JSON.stringify(mapStyle, null, 2));
       
       // Initialize MapLibre map
       map.current = new maplibregl.Map({
@@ -155,6 +172,17 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         console.log('Style loaded successfully');
       });
 
+      map.current.on('styledata', (e) => {
+        console.log('Style data event:', e.dataType);
+        if (e.dataType === 'style') {
+          console.log('Style sources:', Object.keys(map.current?.getStyle()?.sources || {}));
+        }
+      });
+
+      map.current.on('sourcedataloading', (e) => {
+        console.log('Source data loading:', e.sourceId, e.dataType);
+      });
+
       // Add a safety timeout in case the load event never fires
       setTimeout(() => {
         if (document.querySelector('.loading-overlay')) {
@@ -166,6 +194,10 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
       map.current.on('error', (e: maplibregl.ErrorEvent) => {
         console.error('Map error:', e)
+        console.error('Error details:', e.error)
+        if (e.sourceId) {
+          console.error('Error source:', e.sourceId)
+        }
         setError(`Map error: ${e.error?.message || 'Unknown error'}`)
         setIsLoading(false)
       })
