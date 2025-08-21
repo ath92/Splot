@@ -28,89 +28,81 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
     console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight)
 
     try {
-      // Check if PMTiles failed before and use fallback immediately
-      const pmtilesFailedBefore = localStorage.getItem('pmtiles-failed') === 'true';
-      
-      // Try PMTiles first (unless it failed before), but have a fallback
+      // Try PMTiles approach (like simple-map), fallback to demo tiles
       let mapStyle: maplibregl.StyleSpecification | string;
-      let usePMTiles = !pmtilesFailedBefore;
+      let usePMTiles = true;
       
-      if (usePMTiles) {
-        try {
-          // Set up PMTiles protocol for direct pmtiles file loading
-          const protocol = new pmtiles.Protocol({metadata: true});
-          maplibregl.addProtocol("pmtiles", protocol.tile);
-          
-          // Use local pmtiles file from public folder
-          const currentUrl = window.location;
-          const pmtilesUrl = `pmtiles://${currentUrl.origin}/world-tiles-simple.pmtiles`;
-          
-          console.log('Using pmtiles URL:', pmtilesUrl);
-          
-          // Create map style similar to simple-map approach
-          mapStyle = {
-            version: 8,
-            sources: {
-              example_source: {
-                type: "vector",
-                url: pmtilesUrl,
+      try {
+        // Set up PMTiles protocol for direct pmtiles file loading  
+        const protocol = new pmtiles.Protocol({metadata: true});
+        maplibregl.addProtocol("pmtiles", protocol.tile);
+        
+        // Use local pmtiles file from public folder
+        const currentUrl = window.location;
+        const pmtilesUrl = `pmtiles://${currentUrl.origin}/world-tiles-simple.pmtiles`;
+        
+        console.log('Attempting PMTiles URL:', pmtilesUrl);
+        
+        // Create map style similar to simple-map approach
+        mapStyle = {
+          version: 8,
+          sources: {
+            example_source: {
+              type: "vector",
+              url: pmtilesUrl,
+            },
+          },
+          layers: [
+            {
+              id: "background",
+              type: "background",
+              paint: {
+                "background-color": "#121212",
               },
             },
-            layers: [
-              {
-                id: "background",
-                type: "background",
-                paint: {
-                  "background-color": "#121212",
-                },
+            {
+              id: "water",
+              source: "example_source",
+              "source-layer": "water",
+              filter: ["==",["geometry-type"],"Polygon"],
+              type: "fill",
+              paint: {
+                "fill-color": "#80b1d3",
               },
-              {
-                id: "water",
-                source: "example_source",
-                "source-layer": "water",
-                filter: ["==",["geometry-type"],"Polygon"],
-                type: "fill",
-                paint: {
-                  "fill-color": "#80b1d3",
-                },
+            },
+            {
+              id: "buildings",
+              source: "example_source",
+              "source-layer": "buildings",
+              type: "fill",
+              paint: {
+                "fill-color": "#d9d9d9",
               },
-              {
-                id: "buildings",
-                source: "example_source",
-                "source-layer": "buildings",
-                type: "fill",
-                paint: {
-                  "fill-color": "#d9d9d9",
-                },
+            },
+            {
+              id: "roads",
+              source: "example_source",
+              "source-layer": "roads",
+              type: "line",
+              paint: {
+                "line-color": "#fc8d62",
               },
-              {
-                id: "roads",
-                source: "example_source",
-                "source-layer": "roads",
-                type: "line",
-                paint: {
-                  "line-color": "#fc8d62",
-                },
+            },
+            {
+              id: "pois",
+              source: "example_source",
+              "source-layer": "pois",
+              type: "circle",
+              paint: {
+                "circle-color": "#ffffb3",
               },
-              {
-                id: "pois",
-                source: "example_source",
-                "source-layer": "pois",
-                type: "circle",
-                paint: {
-                  "circle-color": "#ffffb3",
-                },
-              },
-            ],
-          };
-        } catch (pmtilesError) {
-          console.warn('Failed to setup PMTiles, falling back to demo tiles:', pmtilesError);
-          mapStyle = 'https://demotiles.maplibre.org/style.json';
-          usePMTiles = false;
-        }
-      } else {
-        console.log('PMTiles failed before, using demo tiles directly');
+            },
+          ],
+        };
+      } catch (pmtilesError) {
+        console.warn('Failed to setup PMTiles, falling back to demo tiles:', pmtilesError);
         mapStyle = 'https://demotiles.maplibre.org/style.json';
+        usePMTiles = false;
       }
       
       // Initialize MapLibre map
@@ -121,7 +113,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         zoom: usePMTiles ? 3 : 1
       })
 
-      console.log('MapLibre map initialized:', map.current, 'using PMTiles:', usePMTiles)
+      console.log('MapLibre map initialized with', usePMTiles ? 'PMTiles' : 'demo tiles')
 
       // Force the map to render by triggering a resize
       setTimeout(() => {
@@ -133,12 +125,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
       // Add a basic layer after the map loads
       map.current.on('load', async () => {
-        console.log('Map load event fired - PMTiles working!')
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
-        // Clear any previous failure flag since it worked
-        localStorage.removeItem('pmtiles-failed');
+        console.log('Map loaded successfully!')
         setIsLoading(false)
         
         // Set globe projection
@@ -220,37 +207,10 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         }
       })
 
-      // Add a timeout to catch if map never loads (only for PMTiles)
-      let timeoutId: NodeJS.Timeout | null = null;
-      if (usePMTiles) {
-        timeoutId = setTimeout(() => {
-          if (isLoading) {
-            console.warn('PMTiles map is taking too long to load, marking as failed and reloading')
-            // Remember that PMTiles failed
-            localStorage.setItem('pmtiles-failed', 'true');
-            // Force reload with demo tiles
-            window.location.reload();
-          }
-        }, 5000);
-      }
-
       map.current.on('error', (e: maplibregl.ErrorEvent) => {
         console.error('Map error:', e)
-        console.error('Error details:', e.error)
         setError(`Map error: ${e.error?.message || 'Unknown error'}`)
         setIsLoading(false)
-      })
-
-      map.current.on('style.load', () => {
-        console.log('Map style loaded')
-      })
-      
-      map.current.on('sourcedata', (e) => {
-        console.log('Source data event:', e.sourceId, e.dataType)
-      })
-
-      map.current.on('data', (e) => {
-        console.log('Map data event:', e.dataType, e.sourceDataType)
       })
 
     } catch (err) {
