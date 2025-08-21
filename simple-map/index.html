@@ -8,14 +8,139 @@
         <style>
             body {
                 margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                    sans-serif;
             }
             #map {
                 height:100%; width:100%;
+            }
+            
+            /* Photo Overlay Styles */
+            .photo-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.8);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 100000;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+            
+            .photo-overlay.show {
+                display: flex;
+            }
+            
+            .photo-overlay-content {
+                position: relative;
+                max-width: 90vw;
+                max-height: 90vh;
+                background-color: #1a1a1a;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            }
+            
+            .photo-overlay-close {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+                cursor: pointer;
+                z-index: 100001;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background-color 0.3s ease;
+            }
+            
+            .photo-overlay-close:hover {
+                background: rgba(0, 0, 0, 0.9);
+            }
+            
+            .photo-overlay-image {
+                width: 100%;
+                height: auto;
+                max-height: calc(90vh - 100px);
+                object-fit: contain;
+                display: block;
+            }
+            
+            .photo-overlay-info {
+                padding: 15px 20px;
+                color: #e0e0e0;
+                background-color: #1a1a1a;
+            }
+            
+            .photo-overlay-info h3 {
+                margin: 0 0 10px 0;
+                font-size: 18px;
+                font-weight: 600;
+                color: #ffffff;
+            }
+            
+            .photo-overlay-info p {
+                margin: 5px 0;
+                font-size: 14px;
+                color: #b0b0b0;
+            }
+            
+            /* Mobile optimizations for overlay */
+            @media (max-width: 768px) {
+                .photo-overlay {
+                    padding: 10px;
+                }
+                
+                .photo-overlay-content {
+                    max-width: 95vw;
+                    max-height: 95vh;
+                }
+                
+                .photo-overlay-image {
+                    max-height: calc(95vh - 80px);
+                }
+                
+                .photo-overlay-info {
+                    padding: 12px 15px;
+                }
+                
+                .photo-overlay-info h3 {
+                    font-size: 16px;
+                }
+                
+                .photo-overlay-info p {
+                    font-size: 13px;
+                }
             }
         </style>
     </head>
     <body>
         <div id="map"></div>
+        
+        <!-- Photo Overlay -->
+        <div id="photo-overlay" class="photo-overlay">
+            <div class="photo-overlay-content">
+                <button class="photo-overlay-close" onclick="closePhotoOverlay()">×</button>
+                <img id="photo-overlay-image" class="photo-overlay-image" src="" alt="" />
+                <div class="photo-overlay-info">
+                    <h3 id="photo-overlay-title"></h3>
+                    <p id="photo-overlay-camera"></p>
+                    <p id="photo-overlay-date"></p>
+                    <p id="photo-overlay-location"></p>
+                </div>
+            </div>
+        </div>
         <script type="text/javascript">
             // add the PMTiles plugin to the maplibregl global.
             // setting metadata = true fills out the "attribution" field of the source, and is required for some inspector applications,
@@ -83,7 +208,294 @@
             map.on("load", () => {
                 map.setProjection({
                     type: 'globe'
-                })
+                });
+                
+                // Load data and add features to map
+                loadDataAndInitialize();
+            });
+            
+            // Fallback: load data and add features after a timeout even if load event doesn't fire
+            setTimeout(() => {
+                console.log('Timeout fallback: loading data and adding features');
+                loadDataAndInitialize();
+            }, 3000);
+            
+            // Photo worker configuration
+            const WORKER_URL = 'https://splot-photo-worker.tomhutman.workers.dev';
+            
+            // Global variables for photos and flights data
+            let photosData = [];
+            let flightsData = null;
+            
+            // Fetch photos from the worker API
+            async function fetchPhotos() {
+                try {
+                    const response = await fetch(`${WORKER_URL}/photos`);
+                    if (!response.ok) {
+                        console.warn('Failed to fetch photos:', response.status);
+                        return { photos: [], count: 0 };
+                    }
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.warn('Error fetching photos:', error.message);
+                    return { photos: [], count: 0 };
+                }
+            }
+            
+            // Fetch flight data from JSON file
+            async function fetchFlights() {
+                try {
+                    const response = await fetch('./flights.json');
+                    if (!response.ok) {
+                        console.warn('Failed to fetch flights:', response.status);
+                        return null;
+                    }
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.warn('Error fetching flights:', error.message);
+                    return null;
+                }
+            }
+            
+            // Load data and initialize map features
+            async function loadDataAndInitialize() {
+                // Load photos and flights in parallel
+                const [photosResult, flightsResult] = await Promise.all([
+                    fetchPhotos(),
+                    fetchFlights()
+                ]);
+                
+                photosData = photosResult.photos || [];
+                flightsData = flightsResult;
+                
+                console.log(`Loaded ${photosData.length} photos and ${flightsData ? 'flight data' : 'no flight data'}`);
+                
+                // Add features to map if it's ready
+                if (map.isStyleLoaded()) {
+                    addPhotoMarkers(map);
+                    addFlightPaths(map);
+                }
+            }
+            
+            // Add photo markers to the map
+            function addPhotoMarkers(map) {
+                console.log('Adding photo markers:', photosData.length);
+                
+                // Skip if no photos or if source already exists
+                if (photosData.length === 0) {
+                    console.log('No photos to display');
+                    return;
+                }
+                
+                if (map.getSource('photos')) {
+                    console.log('Photos source already exists, skipping addition');
+                    return;
+                }
+                
+                const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'];
+                
+                // Create GeoJSON source for photo markers
+                const photoFeatures = photosData.map((photo, index) => ({
+                    type: 'Feature',
+                    properties: {
+                        photo: JSON.stringify(photo), // Store photo data for click handling
+                        color: colors[index % 5],
+                        index: index
+                    },
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [photo.location.longitude, photo.location.latitude]
+                    }
+                }));
+                
+                // Add source for photo markers
+                map.addSource('photos', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: photoFeatures
+                    }
+                });
+                
+                // Add layer for photo markers
+                if (!map.getLayer('photos')) {
+                    map.addLayer({
+                        id: 'photos',
+                        type: 'circle',
+                        source: 'photos',
+                        paint: {
+                            'circle-radius': 12,
+                            'circle-color': ['get', 'color'],
+                            'circle-stroke-width': 3,
+                            'circle-stroke-color': '#ffffff',
+                            'circle-opacity': 0.9
+                        }
+                    });
+                }
+                
+                // Add click handler for photo markers
+                map.on('click', 'photos', function(e) {
+                    if (e.features && e.features.length > 0) {
+                        const feature = e.features[0];
+                        if (feature.properties && feature.properties.photo) {
+                            try {
+                                const photo = JSON.parse(feature.properties.photo);
+                                console.log('Photo marker clicked:', photo.originalName);
+                                showPhotoOverlay(photo);
+                            } catch (err) {
+                                console.error('Error parsing photo data:', err);
+                            }
+                        }
+                    }
+                });
+                
+                // Change cursor to pointer when hovering over markers
+                map.on('mouseenter', 'photos', function() {
+                    map.getCanvas().style.cursor = 'pointer';
+                });
+                
+                map.on('mouseleave', 'photos', function() {
+                    map.getCanvas().style.cursor = '';
+                });
+                
+                console.log('Added ' + photosData.length + ' photo markers as GeoJSON features');
+                
+                // Zoom to show the first marker with globe-appropriate zoom
+                if (photosData.length > 0) {
+                    map.flyTo({
+                        center: [photosData[0].location.longitude, photosData[0].location.latitude],
+                        zoom: 3,
+                        duration: 2000
+                    });
+                }
+            }
+            
+            // Add flight paths to the map
+            function addFlightPaths(map) {
+                console.log('Adding flight paths');
+                
+                // Skip if no flight data or if source already exists
+                if (!flightsData) {
+                    console.log('No flight data available');
+                    return;
+                }
+                
+                if (map.getSource('flights')) {
+                    console.log('Flights source already exists, skipping addition');
+                    return;
+                }
+                
+                const airports = flightsData.airports;
+                const flights = flightsData.flights;
+                const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9f43', '#ee5a6f', '#00d2d3'];
+                
+                // Convert flights to GeoJSON LineString features
+                const flightFeatures = flights.map(function(flight, index) {
+                    const fromAirport = airports[flight.from];
+                    const toAirport = airports[flight.to];
+                    
+                    if (!fromAirport || !toAirport) {
+                        console.warn('Missing airport data for flight ' + flight.route);
+                        return null;
+                    }
+                    
+                    return {
+                        type: 'Feature',
+                        properties: {
+                            route: flight.route,
+                            id: flight.id.toString(),
+                            color: colors[index % 8]
+                        },
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [fromAirport.longitude, fromAirport.latitude],
+                                [toAirport.longitude, toAirport.latitude]
+                            ]
+                        }
+                    };
+                }).filter(function(f) { return f !== null; });
+                
+                // Add source and layer for flight paths
+                map.addSource('flights', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: flightFeatures
+                    }
+                });
+                
+                // Add layer for flight paths
+                if (!map.getLayer('flights')) {
+                    map.addLayer({
+                        id: 'flights',
+                        type: 'line',
+                        source: 'flights',
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': ['get', 'color'],
+                            'line-width': 3,
+                            'line-opacity': 0.8
+                        }
+                    });
+                }
+                
+                console.log('Added ' + flightFeatures.length + ' flight paths');
+            }
+            
+            // Show photo overlay
+            function showPhotoOverlay(photo) {
+                const overlay = document.getElementById('photo-overlay');
+                const image = document.getElementById('photo-overlay-image');
+                const title = document.getElementById('photo-overlay-title');
+                const camera = document.getElementById('photo-overlay-camera');
+                const date = document.getElementById('photo-overlay-date');
+                const location = document.getElementById('photo-overlay-location');
+                
+                // Set photo data
+                image.src = photo.url;
+                image.alt = photo.originalName || photo.filename;
+                title.textContent = photo.originalName || photo.filename;
+                
+                if (photo.cameraMake && photo.cameraModel) {
+                    camera.textContent = photo.cameraMake + ' ' + photo.cameraModel;
+                    camera.style.display = 'block';
+                } else {
+                    camera.style.display = 'none';
+                }
+                
+                if (photo.dateTime) {
+                    date.textContent = new Date(photo.dateTime).toLocaleDateString();
+                    date.style.display = 'block';
+                } else {
+                    date.style.display = 'none';
+                }
+                
+                const lat = photo.location.latitude.toFixed(6);
+                const lng = photo.location.longitude.toFixed(6);
+                const altText = photo.location.altitude ? ' (' + photo.location.altitude.toFixed(0) + 'm)' : '';
+                location.textContent = lat + ', ' + lng + altText;
+                
+                // Show overlay
+                overlay.classList.add('show');
+            }
+            
+            // Close photo overlay
+            function closePhotoOverlay() {
+                const overlay = document.getElementById('photo-overlay');
+                overlay.classList.remove('show');
+            }
+            
+            // Close overlay when clicking outside the content
+            document.getElementById('photo-overlay').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closePhotoOverlay();
+                }
             });
         </script>
     </body>
