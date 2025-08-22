@@ -45,14 +45,9 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         
         // Create map style with typical map colors and basic improvements
         mapStyle = {
-          version: 8,
-          glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
-          sources: {
-            example_source: {
-              type: "vector",
-              url: pmtilesUrl,
-            },
-          },
+          "version": 8,
+          "glyphs": "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+          "sprite": "https://protomaps.github.io/basemaps-assets/sprites/v4/light",
           layers: [
             {
               id: "background",
