@@ -43,21 +43,23 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         
         console.log('Attempting PMTiles URL:', pmtilesUrl);
         
-        // Create map style similar to simple-map approach
+        // Create map style with typical map colors and basic improvements
         mapStyle = {
-          version: 8,
+          "version": 8,
+          "glyphs": "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+          "sprite": "https://protomaps.github.io/basemaps-assets/sprites/v4/light",
           sources: {
-            example_source: {
-              type: "vector",
-              url: pmtilesUrl,
-            },
-          },
-          layers: [
+             example_source: {
+               type: "vector",
+               url: pmtilesUrl,
+             },
+           },
+           layers: [
             {
               id: "background",
               type: "background",
               paint: {
-                "background-color": "#121212",
+                "background-color": "#f0f8ff",
               },
             },
             {
@@ -67,34 +69,107 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               filter: ["==",["geometry-type"],"Polygon"],
               type: "fill",
               paint: {
-                "fill-color": "#80b1d3",
+                "fill-color": "#4285f4",
+                "fill-opacity": 0.8,
+              },
+            },
+            {
+              id: "land",
+              source: "example_source",
+              "source-layer": "earth",
+              type: "fill",
+              paint: {
+                "fill-color": "#f5f5dc",
+                "fill-opacity": 1,
+              },
+            },
+            {
+              id: "countries",
+              source: "example_source",
+              "source-layer": "boundaries",
+              filter: ["==", "admin_level", 2],
+              type: "line",
+              paint: {
+                "line-color": "#8b9dc3",
+                "line-width": 1.5,
+                "line-opacity": 0.8,
+              },
+            },
+            {
+              id: "states",
+              source: "example_source",
+              "source-layer": "boundaries",
+              filter: ["==", "admin_level", 4],
+              minzoom: 4,
+              type: "line",
+              paint: {
+                "line-color": "#b0b0b0",
+                "line-width": 0.5,
+                "line-opacity": 0.6,
               },
             },
             {
               id: "buildings",
               source: "example_source",
               "source-layer": "buildings",
+              minzoom: 14,
               type: "fill",
               paint: {
-                "fill-color": "#d9d9d9",
+                "fill-color": "#d0d0d0",
+                "fill-opacity": 0.7,
               },
             },
             {
               id: "roads",
               source: "example_source",
               "source-layer": "roads",
+              minzoom: 6,
               type: "line",
               paint: {
-                "line-color": "#fc8d62",
+                "line-color": "#ffffff",
+                "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.5, 12, 2],
+                "line-opacity": 0.8,
               },
             },
             {
               id: "pois",
               source: "example_source",
               "source-layer": "pois",
+              minzoom: 12,
               type: "circle",
               paint: {
-                "circle-color": "#ffffb3",
+                "circle-color": "#ff6b35",
+                "circle-radius": 4,
+                "circle-opacity": 0.8,
+              },
+            },
+            {
+              id: "place-labels",
+              source: "example_source",
+              "source-layer": "places",
+              type: "symbol",
+              minzoom: 2,
+              layout: {
+                "text-field": ["get", "name"],
+                "text-font": ["sans-serif"],
+                "text-size": [
+                  "interpolate", 
+                  ["linear"], 
+                  ["zoom"], 
+                  2, 8,
+                  4, 10, 
+                  6, 12,
+                  8, 14,
+                  10, 16
+                ],
+                "text-anchor": "center",
+                "text-allow-overlap": false,
+                "text-optional": true,
+              },
+              paint: {
+                "text-color": "#2c3e50",
+                "text-halo-color": "#ffffff",
+                "text-halo-width": 1.5,
               },
             },
           ],
@@ -125,6 +200,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
       // Add a basic layer after the map loads
       map.current.on('load', async () => {
+        console.log('Map load event fired')
         console.log('Map loaded successfully!')
         setIsLoading(false)
         
