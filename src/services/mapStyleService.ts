@@ -2,7 +2,7 @@
 export const createProtomapsStyle = (tileJsonUrl: string) => ({
   "version": 8,
   "name": "Splot Protomaps",
-  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  "glyphs": "/fonts/{fontstack}/{range}.pbf",
   "sources": {
     "protomaps": {
       "type": "vector",

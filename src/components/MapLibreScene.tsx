@@ -46,6 +46,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         // Create map style similar to simple-map approach
         mapStyle = {
           version: 8,
+          glyphs: "/fonts/{fontstack}/{range}.pbf",
           sources: {
             example_source: {
               type: "vector",
@@ -101,7 +102,54 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         };
       } catch (pmtilesError) {
         console.warn('Failed to setup PMTiles, falling back to demo tiles:', pmtilesError);
-        mapStyle = 'https://demotiles.maplibre.org/style.json';
+        // Use a simple style with local fonts for testing
+        mapStyle = {
+          version: 8,
+          glyphs: "/fonts/{fontstack}/{range}.pbf",
+          sources: {
+            "openmaptiles": {
+              type: "vector",
+              url: "https://demotiles.maplibre.org/tiles.json"
+            }
+          },
+          layers: [
+            {
+              id: "background",
+              type: "background",
+              paint: {
+                "background-color": "#1e3a8a"
+              }
+            },
+            {
+              id: "countries",
+              type: "fill",
+              source: "openmaptiles",
+              "source-layer": "countries",
+              paint: {
+                "fill-color": "#2d2d2d",
+                "fill-opacity": 0.8
+              }
+            },
+            {
+              id: "places",
+              type: "symbol",
+              source: "openmaptiles",
+              "source-layer": "places",
+              minzoom: 4,
+              layout: {
+                "text-field": "{name}",
+                "text-font": ["sans-serif"],
+                "text-size": 14,
+                "text-anchor": "center"
+              },
+              paint: {
+                "text-color": "#ffffff",
+                "text-halo-color": "#000000",
+                "text-halo-width": 1
+              }
+            }
+          ]
+        } as maplibregl.StyleSpecification;
         usePMTiles = false;
       }
       
