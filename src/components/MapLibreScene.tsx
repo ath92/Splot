@@ -46,6 +46,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         // Create map style with typical map colors and basic improvements
         mapStyle = {
           version: 8,
+          glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
           sources: {
             example_source: {
               type: "vector",
@@ -69,6 +70,41 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               paint: {
                 "fill-color": "#4285f4",
                 "fill-opacity": 0.8,
+              },
+            },
+            {
+              id: "land",
+              source: "example_source",
+              "source-layer": "earth",
+              type: "fill",
+              paint: {
+                "fill-color": "#f5f5dc",
+                "fill-opacity": 1,
+              },
+            },
+            {
+              id: "countries",
+              source: "example_source",
+              "source-layer": "boundaries",
+              filter: ["==", "admin_level", 2],
+              type: "line",
+              paint: {
+                "line-color": "#8b9dc3",
+                "line-width": 1.5,
+                "line-opacity": 0.8,
+              },
+            },
+            {
+              id: "states",
+              source: "example_source",
+              "source-layer": "boundaries",
+              filter: ["==", "admin_level", 4],
+              minzoom: 4,
+              type: "line",
+              paint: {
+                "line-color": "#b0b0b0",
+                "line-width": 0.5,
+                "line-opacity": 0.6,
               },
             },
             {
@@ -106,6 +142,35 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
                 "circle-opacity": 0.8,
               },
             },
+            {
+              id: "place-labels",
+              source: "example_source",
+              "source-layer": "places",
+              type: "symbol",
+              minzoom: 2,
+              layout: {
+                "text-field": ["get", "name"],
+                "text-font": ["sans-serif"],
+                "text-size": [
+                  "interpolate", 
+                  ["linear"], 
+                  ["zoom"], 
+                  2, 8,
+                  4, 10, 
+                  6, 12,
+                  8, 14,
+                  10, 16
+                ],
+                "text-anchor": "center",
+                "text-allow-overlap": false,
+                "text-optional": true,
+              },
+              paint: {
+                "text-color": "#2c3e50",
+                "text-halo-color": "#ffffff",
+                "text-halo-width": 1.5,
+              },
+            },
           ],
         };
       } catch (pmtilesError) {
@@ -134,6 +199,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
       // Add a basic layer after the map loads
       map.current.on('load', async () => {
+        console.log('Map load event fired')
         console.log('Map loaded successfully!')
         setIsLoading(false)
         
