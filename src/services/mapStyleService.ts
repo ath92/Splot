@@ -2,7 +2,7 @@
 export const createProtomapsStyle = (tileJsonUrl: string) => ({
   "version": 8,
   "name": "Splot Protomaps",
-  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  "glyphs": "/fonts/{fontstack}/{range}.pbf",
   "sources": {
     "protomaps": {
       "type": "vector",
@@ -82,7 +82,7 @@ export const createProtomapsStyle = (tileJsonUrl: string) => ({
       "minzoom": 4,
       "layout": {
         "text-field": "{name}",
-        "text-font": ["sans-serif"],
+        "text-font": ["Open Sans Regular"],
         "text-size": ["interpolate", ["linear"], ["zoom"], 4, 10, 8, 14],
         "text-anchor": "center"
       },
