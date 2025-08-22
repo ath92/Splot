@@ -116,24 +116,6 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
                 "text-halo-width": 1
               }
             },
-            {
-              id: "water-labels",
-              type: "symbol",
-              source: "example_source",
-              "source-layer": "water_name",
-              minzoom: 6,
-              layout: {
-                "text-field": "{name}",
-                "text-font": ["Open Sans Regular"],
-                "text-size": 12,
-                "text-anchor": "center"
-              },
-              paint: {
-                "text-color": "#80b1d3",
-                "text-halo-color": "#000000",
-                "text-halo-width": 1
-              }
-            },
           ],
         };
       } catch (pmtilesError) {
