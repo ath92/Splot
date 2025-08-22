@@ -48,7 +48,13 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
           "version": 8,
           "glyphs": "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
           "sprite": "https://protomaps.github.io/basemaps-assets/sprites/v4/light",
-          layers: [
+          sources: {
+             example_source: {
+               type: "vector",
+               url: pmtilesUrl,
+             },
+           },
+           layers: [
             {
               id: "background",
               type: "background",
