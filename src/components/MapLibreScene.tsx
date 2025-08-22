@@ -98,6 +98,42 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
                 "circle-color": "#ffffb3",
               },
             },
+            {
+              id: "places",
+              type: "symbol",
+              source: "example_source",
+              "source-layer": "places",
+              minzoom: 4,
+              layout: {
+                "text-field": "{name}",
+                "text-font": ["Open Sans Regular"],
+                "text-size": ["interpolate", ["linear"], ["zoom"], 4, 10, 8, 14],
+                "text-anchor": "center"
+              },
+              paint: {
+                "text-color": "#ffffff",
+                "text-halo-color": "#000000",
+                "text-halo-width": 1
+              }
+            },
+            {
+              id: "water-labels",
+              type: "symbol",
+              source: "example_source",
+              "source-layer": "water_name",
+              minzoom: 6,
+              layout: {
+                "text-field": "{name}",
+                "text-font": ["Open Sans Regular"],
+                "text-size": 12,
+                "text-anchor": "center"
+              },
+              paint: {
+                "text-color": "#80b1d3",
+                "text-halo-color": "#000000",
+                "text-halo-width": 1
+              }
+            },
           ],
         };
       } catch (pmtilesError) {
@@ -138,7 +174,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               minzoom: 4,
               layout: {
                 "text-field": "{name}",
-                "text-font": ["sans-serif"],
+                "text-font": ["Open Sans Regular"],
                 "text-size": 14,
                 "text-anchor": "center"
               },
@@ -158,7 +194,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         container: mapContainer.current,
         style: mapStyle as maplibregl.StyleSpecification,
         center: usePMTiles ? [11.2543435, 43.7672134] : [0, 0],
-        zoom: usePMTiles ? 3 : 1
+        zoom: usePMTiles ? 3 : 2
       })
 
       console.log('MapLibre map initialized with', usePMTiles ? 'PMTiles' : 'demo tiles')
@@ -171,8 +207,31 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
         }
       }, 100)
 
+      // Add event listeners to understand map loading
+      map.current.on('styledata', () => {
+        console.log('Style loaded')
+        if (map.current?.isStyleLoaded()) {
+          console.log('Style is fully loaded')
+          setIsLoading(false)
+        }
+      })
+      
+      map.current.on('sourcedata', (e) => {
+        console.log('Source data event:', e.sourceId, e.isSourceLoaded)
+        if (e.sourceId === 'example_source' && e.isSourceLoaded) {
+          console.log('PMTiles source loaded successfully')
+        }
+      })
+      
+      map.current.on('data', (e) => {
+        console.log('Data event:', e.type, e.sourceId)
+      })
+
       // Add a basic layer after the map loads
+      let hasLoaded = false;
+      
       map.current.on('load', async () => {
+        hasLoaded = true;
         console.log('Map loaded successfully!')
         setIsLoading(false)
         
@@ -257,6 +316,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
 
       map.current.on('error', (e: maplibregl.ErrorEvent) => {
         console.error('Map error:', e)
+        console.error('Error details:', e.error)
         setError(`Map error: ${e.error?.message || 'Unknown error'}`)
         setIsLoading(false)
       })
