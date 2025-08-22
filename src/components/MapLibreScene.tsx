@@ -58,7 +58,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               id: "background",
               type: "background",
               paint: {
-                "background-color": "#121212",
+                "background-color": "#00ff99",
               },
             },
             {
@@ -86,7 +86,7 @@ export default function MapLibreScene({ onPhotoClick }: MapLibreSceneProps) {
               "source-layer": "roads",
               type: "line",
               paint: {
-                "line-color": "#fc8d62",
+                "line-color": "#999999",
               },
             },
             {
